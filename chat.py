@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-"""
-LLM CLI Chat Application
-A command-line interface for conversing with an LLM via the OpenAI SDK.
-"""
-
 import os
 import sys
 import logging
@@ -11,22 +5,16 @@ from datetime import datetime
 from dotenv import load_dotenv
 from openai import OpenAI, APIError, AuthenticationError, RateLimitError
 
-# ---------------------------------------------------------------------------
-# Configuration
-# ---------------------------------------------------------------------------
-
 load_dotenv()
 
 SYSTEM_PROMPT = """You are a helpful, concise, and friendly assistant.
 You answer questions clearly and honestly. When you don't know something,
-you say so. You keep responses focused and avoid unnecessary padding."""
+you say so. You keep responses focused and avoid unnecessary padding. Your name is Selim."""
 
 LOG_FILE = "chat.log"
 MODEL = os.getenv("LLM_MODEL", "gpt-4o-mini")
 
-# ---------------------------------------------------------------------------
-# Logging
-# ---------------------------------------------------------------------------
+# kayıt tutma 
 
 def setup_logging() -> logging.Logger:
     logger = logging.getLogger("llm-cli")
@@ -50,9 +38,9 @@ def setup_logging() -> logging.Logger:
 
 logger = setup_logging()
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
+
+# groqa bağlanma
+
 
 def get_client() -> OpenAI:
     api_key = os.getenv("OPENAI_API_KEY")
@@ -60,8 +48,9 @@ def get_client() -> OpenAI:
         logger.error("OPENAI_API_KEY not found in environment.")
         print("\n❌  OPENAI_API_KEY bulunamadı. Lütfen .env dosyanızı kontrol edin.\n")
         sys.exit(1)
-    return OpenAI(api_key=api_key)
+    return OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
 
+# cevabı ekrana yazdırma
 
 def stream_response(client: OpenAI, messages: list[dict]) -> str:
     """Send messages to the API with streaming and print tokens as they arrive."""
@@ -99,9 +88,8 @@ def print_banner():
     print("=" * 55)
     print()
 
-# ---------------------------------------------------------------------------
-# Main loop
-# ---------------------------------------------------------------------------
+
+# Main 
 
 def main():
     print_banner()
