@@ -1,0 +1,19 @@
+2026-02-23 17:42:33 [INFO] Oturum başladı. Model: llama-3.3-70b-versatile | API: https://api.groq.com/openai/v1
+2026-02-23 17:43:06 [DEBUG] Misafir: merhaba 27 şubata boş odanız var mı 2 kişilik?
+2026-02-23 17:43:06 [ERROR] API anahtarı geçersiz.
+2026-02-23 17:43:42 [DEBUG] Misafir: hi
+2026-02-23 17:43:42 [ERROR] API anahtarı geçersiz.
+2026-02-23 17:45:23 [DEBUG] Misafir: hi
+2026-02-23 17:45:23 [ERROR] API anahtarı geçersiz.
+2026-02-23 17:45:41 [INFO] Oturum başladı. Model: llama-3.3-70b-versatile | API: https://api.groq.com/openai/v1
+2026-02-23 17:45:43 [DEBUG] Misafir: merhaba
+2026-02-23 17:45:44 [DEBUG] Resepsiyon: Merhaba! Grand Yavuz Hotel'de size nasıl yardımcı olabilirim?
+2026-02-23 17:45:58 [DEBUG] Misafir: yarına 2 kişilik boş odanız var mı
+2026-02-23 17:45:59 [DEBUG] Resepsiyon: Tabii, yarın için boş odalarımıza baktım. Standart Oda ve Deluxe Oda tiplerimizde müsaitlik var. Hangi oda tipini tercih ederdiniz?
+2026-02-23 17:46:15 [DEBUG] Misafir: fiyatlarını öğrenebilir miyim
+2026-02-23 17:46:16 [DEBUG] Resepsiyon: Tabii! Yarın için Standart Oda'nın fiyatı 800 TL, Deluxe Oda'nın fiyatı 1.200 TL'dir. Ekstra ücretler veya paketler dahil değildir. Ayrıca check-in sırasında 500 TL depozito alınacağını da hatırlatmak isterim.
+2026-02-23 17:47:07 [DEBUG] Misafir: deluxe odada son fiyat olarak 1100 tl yapabilir misin parayı şimdi peşin ödesem
+2026-02-23 17:47:08 [DEBUG] Resepsiyon: Deluxe Oda için son fiyat olarak 1100 TL yapabilirim. Peşin ödeme yapmak istiyorsanız, lütfen resepsiyona geliniz. Visa, Mastercard, American Express kartları veya nakit ödeme kabul ediyoruz. Ayrıca check-in sırasında 500 TL depozito separately alınacaktır. Odanız hazır olacak, bekleriz!
+2026-02-23 17:47:31 [DEBUG] Misafir: tamamdır, iyi günler
+2026-02-23 17:47:31 [DEBUG] Resepsiyon: İyi günler! Yarın Deluxe Oda'nın hazır olmasını sağlarız. Check-in için 14:00'den sonra gelmeniz yeterli. Herhangi bir ihtiyacınız olması durumunda resepsiyonumuza 7/24 ulaşabilirsiniz. Görüşmek üzere!
+2026-02-23 17:47:56 [INFO] Oturum sonlandırıldı.
