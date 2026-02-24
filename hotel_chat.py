@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+ #!/usr/bin/env python3
 """
 Otel Resepsiyon Asistanı — CLI LLM Uygulaması
 Kullanıcıların otel hakkında sorularını yanıtlayan bir CLI chatbot.
@@ -10,9 +10,7 @@ import logging
 from dotenv import load_dotenv
 from openai import OpenAI, APIError, AuthenticationError, RateLimitError
 
-# ---------------------------------------------------------------------------
-# Konfigürasyon
-# ---------------------------------------------------------------------------
+# Otel Bilgileri  
 
 load_dotenv()
 
@@ -76,9 +74,7 @@ MODEL = os.getenv("LLM_MODEL", "llama-3.3-70b-versatile")
 API_KEY = os.getenv("OPENAI_API_KEY")
 API_BASE_URL = os.getenv("MODEL_API_BASE_URL", "https://api.groq.com/openai/v1")
 
-# ---------------------------------------------------------------------------
 # Logging
-# ---------------------------------------------------------------------------
 
 def setup_logging() -> logging.Logger:
     logger = logging.getLogger("hotel-cli")
@@ -100,9 +96,7 @@ def setup_logging() -> logging.Logger:
 
 logger = setup_logging()
 
-# ---------------------------------------------------------------------------
 # Yardımcı Fonksiyonlar
-# ---------------------------------------------------------------------------
 
 def get_client() -> OpenAI:
     if not API_KEY:
@@ -147,9 +141,7 @@ def print_banner():
     print("=" * 55)
     print("\nHoş geldiniz! Size nasıl yardımcı olabilirim?\n")
 
-# ---------------------------------------------------------------------------
 # Ana Döngü
-# ---------------------------------------------------------------------------
 
 def main():
     print_banner()
