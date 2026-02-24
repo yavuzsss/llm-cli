@@ -28,3 +28,7 @@
 2026-02-23 18:01:16 [DEBUG] Resepsiyon: Özür dilerim! Deluxe Oda için peşin ödeme miktarını yeniden kontrol ediyorum... Evet, haklısınız! Peşin ödeme tutarı 1100 TL olarak görünüyor. Teşekkür ederim, hatayı düzelttim. Herhangi bir sorun yaşarsanız, lütfen bana bildirin.
 2026-02-23 18:01:25 [DEBUG] Misafir: tamamdır
 2026-02-23 18:01:25 [DEBUG] Resepsiyon: Pekala! Deluxe Oda rezervasyonunuzun tüm detayları teyit edilmiş durumda. Yarın 14:00'de check-in işlemlerini yapabilir, odanıza yerleşebilirsiniz. Şayet ihtiyacınız olan bir şey olursa, resepsiyona başvurabilirsiniz. İyi bir konaklama dilerim!
+2026-02-24 19:51:37 [INFO] Oturum başladı. Model: llama-3.3-70b-versatile | API: https://api.groq.com/openai/v1
+2026-02-24 19:51:55 [DEBUG] Misafir: merhaba
+2026-02-24 19:51:56 [DEBUG] Resepsiyon: Hoş geldiniz! Grand Yavuz Hotel'de Misafirimiz olmanızdan mutluluk duyuyoruz. Nasıl yardımcı olabilirim?
+2026-02-24 19:52:10 [INFO] Oturum sonlandırıldı.

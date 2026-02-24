@@ -9,7 +9,7 @@ bash
 python -m pip install -r requirements.txt
 Çalıştırma
 bash
-python chat.py
+python hotel_chat.py
 Çıkmak için exit yaz.
 
 Kullanılan Kütüphaneler
