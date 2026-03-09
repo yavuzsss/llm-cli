@@ -1,80 +1,106 @@
- #!/usr/bin/env python3
+#!/usr/bin/env python3
 """
-Otel Resepsiyon Asistanı — CLI LLM Uygulaması
-Kullanıcıların otel hakkında sorularını yanıtlayan bir CLI chatbot.
+Otel Resepsiyon Asistanı — Gelişmiş CLI LLM Uygulaması
+- Rezervasyon yapabilme
+- Çok dil desteği (TR/EN/DE/FR/AR)
+- Konuşma geçmişini dosyaya kaydetme
+- Fiyat hesaplama
 """
 
 import os
 import sys
+import json
 import logging
+from datetime import datetime
 from dotenv import load_dotenv
 from openai import OpenAI, APIError, AuthenticationError, RateLimitError
 
-# Otel Bilgileri  
+# ---------------------------------------------------------------------------
+# Konfigürasyon
+# ---------------------------------------------------------------------------
 
 load_dotenv()
 
 HOTEL_DATA = """
-OTEL BİLGİLERİ:
-- Otel Adı: Grand Yavuz Hotel
-- Adres: Bağdat Caddesi No:42, İstanbul
+HOTEL INFORMATION / OTEL BİLGİLERİ:
+- Hotel Name / Otel Adı: Grand Yavuz Hotel
+- Address / Adres: Bağdat Caddesi No:42, İstanbul
 
 CHECK-IN / CHECK-OUT:
-- Check-in saati: 14:00
-- Check-out saati: 12:00
-- Erken check-in: Talep üzerine, müsaitliğe göre (ek ücret uygulanabilir)
-- Geç check-out: Talep üzerine, müsaitliğe göre (ek ücret uygulanabilir)
+- Check-in: 14:00
+- Check-out: 12:00
+- Early check-in: On request, subject to availability (extra charge may apply)
+- Late check-out: On request, subject to availability (extra charge may apply)
 
-ODA TİPLERİ:
-- Standart Oda: 1 çift kişilik yatak, şehir manzarası, 25 m²
-- Deluxe Oda: 1 king yatak, deniz manzarası, 35 m²
-- Suite: 1 king yatak + oturma odası, panoramik manzara, 60 m²
-- Aile Odası: 2 ayrı yatak, geniş banyo, 45 m²
+ROOM TYPES & PRICES (per night) / ODA TİPLERİ VE FİYATLARI (gecelik):
+- Standard Room / Standart Oda: 2500 TL — 1 double bed, city view, 25 m²
+- Deluxe Room / Deluxe Oda: 3500 TL — 1 king bed, sea view, 35 m²
+- Suite: 6000 TL — 1 king bed + living room, panoramic view, 60 m²
+- Family Room / Aile Odası: 4500 TL — 2 separate beds, large bathroom, 45 m²
 
-HİZMETLER:
-- Ücretsiz Wi-Fi (tüm alanlarda)
-- Açık büfe kahvaltı (07:00 - 10:30)
-- Restoran (12:00 - 22:00)
-- Spa ve wellness merkezi (09:00 - 21:00)
-- Fitness salonu (24 saat)
-- Açık yüzme havuzu (08:00 - 20:00, Mayıs-Ekim arası)
-- Otopark (ücretli, günlük 150 TL)
-- Havalimanı transfer (rezervasyon gerekli)
-- Oda servisi (24 saat)
-- Kuru temizleme (09:00 - 18:00)
-- Concierge hizmeti (24 saat)
+SERVICES / HİZMETLER:
+- Free Wi-Fi (all areas)
+- Open buffet breakfast (07:00 - 10:30) — included in room price
+- Restaurant (12:00 - 22:00)
+- Spa & Wellness (09:00 - 21:00)
+- Fitness center (24 hours)
+- Outdoor pool (08:00 - 20:00, May-October)
+- Parking (paid, 150 TL/day)
+- Airport transfer (reservation required)
+- Room service (24 hours)
+- Dry cleaning (09:00 - 18:00)
+- Concierge (24 hours)
 
-ÖDEME:
-- Kabul edilen kartlar: Visa, Mastercard, American Express
-- Nakit ödeme kabul edilmektedir
-- Depozito: Check-in sırasında 500 TL
+PAYMENT / ÖDEME:
+- Cards: Visa, Mastercard, American Express
+- Cash accepted
+- Deposit: 500 TL at check-in
 
-İPTAL POLİTİKASI:
-- 48 saat öncesine kadar ücretsiz iptal
-- 48 saat içinde iptal: 1 gecelik ücret tahsil edilir
+CANCELLATION / İPTAL POLİTİKASI:
+- Free cancellation up to 48 hours before arrival
+- Within 48 hours: 1 night charge applies
 
-İLETİŞİM:
-- Telefon: +90 212 555 00 42
-- E-posta: info@grandyavuzhotel.com
-- Resepsiyon: 7/24 hizmetinizdedir
+CONTACT / İLETİŞİM:
+- Phone: +90 212 555 00 42
+- Email: info@grandyavuzhotel.com
+- Reception: 24/7
 """
 
-SYSTEM_PROMPT = f"""Sen Grand Yavuz Hotel'in profesyonel ve güler yüzlü resepsiyon asistanısın.
-Misafirlere Türkçe olarak yardımcı oluyorsun.
-Cevapların kısa, net ve samimi olmalı.
-Sadece otel ile ilgili konularda yardımcı oluyorsun.
-Bilmediğin bir şey sorulursa, misafiri resepsiyona yönlendir.
+SYSTEM_PROMPT = f"""You are the professional and friendly reception assistant of Grand Yavuz Hotel.
 
-Aşağıda otele ait bilgiler bulunmaktadır, yalnızca bu bilgilere dayanarak cevap ver:
+LANGUAGE RULE: Detect the language of the guest's message and always reply in that same language.
+Supported languages: Turkish, English, German, French, Arabic.
 
+RESERVATION RULE: When a guest wants to make a reservation, collect these details one by one:
+1. Full name
+2. Room type (Standard / Deluxe / Suite / Family)
+3. Check-in date
+4. Check-out date
+5. Number of guests
+Then confirm the reservation and calculate the total price based on number of nights.
+
+PRICE CALCULATION: Calculate total = room price per night × number of nights.
+Always show the breakdown clearly.
+
+RULES:
+- Keep answers short and friendly
+- Only help with hotel-related topics
+- Never make up information not in the hotel data
+- If you don't know something, direct the guest to the front desk
+
+HOTEL DATA:
 {HOTEL_DATA}"""
 
 LOG_FILE = "hotel_chat.log"
+RESERVATIONS_FILE = "reservations.json"
+HISTORY_FILE = "conversation_history.json"
 MODEL = os.getenv("LLM_MODEL", "llama-3.3-70b-versatile")
 API_KEY = os.getenv("OPENAI_API_KEY")
 API_BASE_URL = os.getenv("MODEL_API_BASE_URL", "https://api.groq.com/openai/v1")
 
+# ---------------------------------------------------------------------------
 # Logging
+# ---------------------------------------------------------------------------
 
 def setup_logging() -> logging.Logger:
     logger = logging.getLogger("hotel-cli")
@@ -96,7 +122,63 @@ def setup_logging() -> logging.Logger:
 
 logger = setup_logging()
 
+# ---------------------------------------------------------------------------
+# Konuşma Geçmişi
+# ---------------------------------------------------------------------------
+
+def save_conversation(messages: list[dict], session_id: str):
+    """Konuşma geçmişini JSON dosyasına kaydeder."""
+    history = []
+
+    if os.path.exists(HISTORY_FILE):
+        try:
+            with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+                history = json.load(f)
+        except Exception:
+            history = []
+
+    # System prompt hariç kaydet
+    conversation = {
+        "session_id": session_id,
+        "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "messages": [m for m in messages if m["role"] != "system"]
+    }
+
+    history.append(conversation)
+
+    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(history, f, ensure_ascii=False, indent=2)
+
+    logger.info("Konuşma geçmişi kaydedildi: %s", HISTORY_FILE)
+
+
+def save_reservation(reservation_text: str, session_id: str):
+    """Rezervasyon bilgilerini JSON dosyasına kaydeder."""
+    reservations = []
+
+    if os.path.exists(RESERVATIONS_FILE):
+        try:
+            with open(RESERVATIONS_FILE, "r", encoding="utf-8") as f:
+                reservations = json.load(f)
+        except Exception:
+            reservations = []
+
+    reservation = {
+        "session_id": session_id,
+        "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "details": reservation_text
+    }
+
+    reservations.append(reservation)
+
+    with open(RESERVATIONS_FILE, "w", encoding="utf-8") as f:
+        json.dump(reservations, f, ensure_ascii=False, indent=2)
+
+    logger.info("Rezervasyon kaydedildi: %s", RESERVATIONS_FILE)
+
+# ---------------------------------------------------------------------------
 # Yardımcı Fonksiyonlar
+# ---------------------------------------------------------------------------
 
 def get_client() -> OpenAI:
     if not API_KEY:
@@ -132,40 +214,61 @@ def stream_response(client: OpenAI, messages: list[dict]) -> str:
     return full_response
 
 
-def print_banner():
+def print_banner(session_id: str):
     print("=" * 55)
     print("  🏨  Grand Yavuz Hotel — Resepsiyon Asistanı")
-    print(f"  Model : {MODEL}")
-    print(f"  API   : {API_BASE_URL}")
+    print(f"  Model   : {MODEL}")
+    print(f"  API     : {API_BASE_URL}")
+    print(f"  Oturum  : {session_id}")
     print("  Çıkmak için 'exit' veya 'quit' yazın.")
+    print("  Rezervasyon listesi için 'rezervasyonlar' yazın.")
     print("=" * 55)
-    print("\nHoş geldiniz! Size nasıl yardımcı olabilirim?\n")
+    print("\nHoş geldiniz! / Welcome! / Willkommen!\n")
 
+# ---------------------------------------------------------------------------
 # Ana Döngü
+# ---------------------------------------------------------------------------
 
 def main():
-    print_banner()
+    session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+    print_banner(session_id)
 
     client = get_client()
     messages: list[dict] = [{"role": "system", "content": SYSTEM_PROMPT}]
 
-    logger.info("Oturum başladı. Model: %s | API: %s", MODEL, API_BASE_URL)
+    logger.info("Oturum başladı. ID: %s | Model: %s | API: %s", session_id, MODEL, API_BASE_URL)
 
     while True:
         try:
             user_input = input("💬 Misafir: ").strip()
         except (EOFError, KeyboardInterrupt):
-            print("\n\n👋  İyi günler dileriz!\n")
-            logger.info("Oturum sonlandırıldı.")
+            print("\n\n👋  İyi günler dileriz! / Goodbye!\n")
+            save_conversation(messages, session_id)
+            logger.info("Oturum sonlandırıldı: %s", session_id)
             break
 
         if not user_input:
             continue
 
+        # Çıkış komutu
         if user_input.lower() in {"exit", "quit"}:
-            print("\n👋  İyi günler dileriz!\n")
-            logger.info("Oturum sonlandırıldı.")
+            print("\n👋  İyi günler dileriz! / Goodbye!\n")
+            save_conversation(messages, session_id)
+            logger.info("Oturum sonlandırıldı: %s", session_id)
             break
+
+        # Rezervasyon listesini göster
+        if user_input.lower() == "rezervasyonlar":
+            if os.path.exists(RESERVATIONS_FILE):
+                with open(RESERVATIONS_FILE, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                print(f"\n📋 Toplam {len(data)} rezervasyon bulundu:\n")
+                for r in data:
+                    print(f"  [{r['date']}] {r['details'][:100]}...")
+                print()
+            else:
+                print("\n📋 Henüz kayıtlı rezervasyon yok.\n")
+            continue
 
         messages.append({"role": "user", "content": user_input})
         logger.debug("Misafir: %s", user_input)
@@ -175,6 +278,14 @@ def main():
         if assistant_reply:
             messages.append({"role": "assistant", "content": assistant_reply})
             logger.debug("Resepsiyon: %s", assistant_reply.strip())
+
+            # Rezervasyon içeriyorsa kaydet
+            rezervasyon_kelimeleri = [
+                "rezervasyon", "reservation", "confirmed", "onaylandı",
+                "booking", "kayıt", "reservierung"
+            ]
+            if any(k in assistant_reply.lower() for k in rezervasyon_kelimeleri):
+                save_reservation(assistant_reply, session_id)
 
 
 if __name__ == "__main__":

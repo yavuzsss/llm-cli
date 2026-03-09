@@ -1,0 +1,32 @@
+[
+  {
+    "session_id": "20260309_181441",
+    "date": "2026-03-09 18:16:06",
+    "messages": [
+      {
+        "role": "user",
+        "content": "merhaba"
+      },
+      {
+        "role": "assistant",
+        "content": "Merhaba! Grand Yavuz Hotel'e hoşgeldiniz. Nasıl yardımcı olabiliriz?"
+      },
+      {
+        "role": "user",
+        "content": "4 gece kral dairesi ne kadar"
+      },
+      {
+        "role": "assistant",
+        "content": "Kral Dairesi'nin gecelik fiyatı 6000 TL'dir. 4 gece konaklama için toplam fiyat:\n\n6000 TL/gece × 4 gece = 24.000 TL\n\nOpen buffet kahvaltı dahil edilmiştir. İsim ve diğer bilgiler için reservasyon yapabilir miyim?"
+      },
+      {
+        "role": "user",
+        "content": "git add ."
+      },
+      {
+        "role": "assistant",
+        "content": "Sanırım yanılıyorsunuz. Burada bir otel予約 sistemi var ve ben bir rezervasyon asistanıyım. Git komutları burada çalışmıyor. Rezervasyonunuza devam etmek ister misiniz? isminizi öğrenmek isterim."
+      }
+    ]
+  }
+]

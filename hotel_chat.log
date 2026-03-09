@@ -32,3 +32,17 @@
 2026-02-24 19:51:55 [DEBUG] Misafir: merhaba
 2026-02-24 19:51:56 [DEBUG] Resepsiyon: Hoş geldiniz! Grand Yavuz Hotel'de Misafirimiz olmanızdan mutluluk duyuyoruz. Nasıl yardımcı olabilirim?
 2026-02-24 19:52:10 [INFO] Oturum sonlandırıldı.
+2026-03-09 18:14:41 [INFO] Oturum başladı. ID: 20260309_181441 | Model: llama-3.3-70b-versatile | API: https://api.groq.com/openai/v1
+2026-03-09 18:14:51 [DEBUG] Misafir: merhaba
+2026-03-09 18:14:52 [DEBUG] Resepsiyon: Merhaba! Grand Yavuz Hotel'e hoşgeldiniz. Nasıl yardımcı olabiliriz?
+2026-03-09 18:15:28 [DEBUG] Misafir: 4 gece kral dairesi ne kadar
+2026-03-09 18:15:28 [DEBUG] Resepsiyon: Kral Dairesi'nin gecelik fiyatı 6000 TL'dir. 4 gece konaklama için toplam fiyat:
+
+6000 TL/gece × 4 gece = 24.000 TL
+
+Open buffet kahvaltı dahil edilmiştir. İsim ve diğer bilgiler için reservasyon yapabilir miyim?
+2026-03-09 18:16:00 [DEBUG] Misafir: git add .
+2026-03-09 18:16:00 [DEBUG] Resepsiyon: Sanırım yanılıyorsunuz. Burada bir otel予約 sistemi var ve ben bir rezervasyon asistanıyım. Git komutları burada çalışmıyor. Rezervasyonunuza devam etmek ister misiniz? isminizi öğrenmek isterim.
+2026-03-09 18:16:00 [INFO] Rezervasyon kaydedildi: reservations.json
+2026-03-09 18:16:06 [INFO] Konuşma geçmişi kaydedildi: conversation_history.json
+2026-03-09 18:16:06 [INFO] Oturum sonlandırıldı: 20260309_181441
