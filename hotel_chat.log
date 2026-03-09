@@ -46,3 +46,9 @@ Open buffet kahvaltı dahil edilmiştir. İsim ve diğer bilgiler için reservas
 2026-03-09 18:16:00 [INFO] Rezervasyon kaydedildi: reservations.json
 2026-03-09 18:16:06 [INFO] Konuşma geçmişi kaydedildi: conversation_history.json
 2026-03-09 18:16:06 [INFO] Oturum sonlandırıldı: 20260309_181441
+2026-03-09 18:47:41 [INFO] Oturum başladı. ID: 20260309_184741 | Model: llama-3.3-70b-versatile | API: https://api.groq.com/openai/v1
+2026-03-09 18:47:43 [DEBUG] Misafir: merhaba
+2026-03-09 18:47:44 [DEBUG] Resepsiyon: Merhaba! Grand Yavuz Hotel'e hoş geldiniz. Size nasıl yardımcı olabilirim? Rezervasyon yapmak czy otel hakkında bilgi almak mı istiyorsunuz?
+2026-03-09 18:47:44 [INFO] Rezervasyon kaydedildi: reservations.json
+2026-03-09 18:47:46 [INFO] Konuşma geçmişi kaydedildi: conversation_history.json
+2026-03-09 18:47:46 [INFO] Oturum sonlandırıldı: 20260309_184741
