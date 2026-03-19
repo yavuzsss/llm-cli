@@ -145,3 +145,6 @@ Once I have this information, I can check the availability of your room for the 
 2026-03-19 15:13:27 [ERROR] Rate limit aşıldı.
 2026-03-19 15:13:33 [INFO] Konuşma geçmişi kaydedildi: conversation_history.json
 2026-03-19 15:13:33 [INFO] Oturum sonlandırıldı: 20260319_151303
+2026-03-19 15:25:53 [INFO] Oturum başladı. ID: 20260319_152553 | Model: llama-3.3-70b-versatile
+2026-03-19 15:25:56 [INFO] Konuşma geçmişi kaydedildi: conversation_history.json
+2026-03-19 15:25:56 [INFO] Oturum sonlandırıldı: 20260319_152553

@@ -149,9 +149,9 @@ ROOM_PRICES = {
     "apart": 9000
 }
 
-# ---------------------------------------------------------------------------
+
 # Logging
-# ---------------------------------------------------------------------------
+
 
 def setup_logging() -> logging.Logger:
     logger = logging.getLogger("hotel-cli")
@@ -173,9 +173,9 @@ def setup_logging() -> logging.Logger:
 
 logger = setup_logging()
 
-# ---------------------------------------------------------------------------
+
 # Tool fonksiyonları — asistanın çağırabileceği araçlar
-# ---------------------------------------------------------------------------
+
 
 def get_current_date() -> dict:
     """Bugünün tarihini ve saatini döndürür."""
@@ -318,9 +318,9 @@ def make_reservation(guest_name: str, room_type: str, checkin_date: str,
     }
 
 
-# ---------------------------------------------------------------------------
+
 # Rezervasyon dosyası yardımcıları
-# ---------------------------------------------------------------------------
+
 
 def load_reservations() -> list:
     """reservations.json dosyasından rezervasyonları okur.
@@ -344,9 +344,9 @@ def save_reservations(reservations: list):
         json.dump(reservations, f, ensure_ascii=False, indent=2)
 
 
-# ---------------------------------------------------------------------------
+
 # Tool tanımları — asistana hangi araçların olduğunu söylüyoruz
-# ---------------------------------------------------------------------------
+
 
 TOOLS = [
     {
@@ -448,9 +448,9 @@ TOOLS = [
     }
 ]
 
-# ---------------------------------------------------------------------------
+
 # Tool çağrısını çalıştıran fonksiyon
-# ---------------------------------------------------------------------------
+
 
 def get_reservations(guest_name: str = None) -> dict:
     """Kayıtlı rezervasyonları döndürür. guest_name verilirse sadece o misafirin rezervasyonları."""
@@ -536,9 +536,9 @@ def execute_tool(tool_name: str, tool_args: dict) -> str:
     logger.debug("Tool sonucu: %s", result)
     return json.dumps(result, ensure_ascii=False)
 
-# ---------------------------------------------------------------------------
+
 # Agent döngüsü — tool call'ları yönetir
-# ---------------------------------------------------------------------------
+
 
 def run_agent(client: OpenAI, messages: list[dict]) -> str:
     """
@@ -632,9 +632,9 @@ def run_agent(client: OpenAI, messages: list[dict]) -> str:
 
     return full_response
 
-# ---------------------------------------------------------------------------
+
 # Konuşma geçmişini kaydet
-# ---------------------------------------------------------------------------
+
 
 def save_conversation(messages: list[dict], session_id: str):
     """Oturum bitince konuşmayı conversation_history.json dosyasına kaydeder."""
@@ -664,9 +664,9 @@ def save_conversation(messages: list[dict], session_id: str):
 
     logger.info("Konuşma geçmişi kaydedildi: %s", HISTORY_FILE)
 
-# ---------------------------------------------------------------------------
+
 # Yardımcı fonksiyonlar
-# ---------------------------------------------------------------------------
+
 
 def get_client() -> OpenAI:
     if not API_KEY:
@@ -706,9 +706,9 @@ def show_reservations():
         print(f"  Toplam   : {r.get('total_price', '?')} TL")
         print()
 
-# ---------------------------------------------------------------------------
+
 # Ana döngü
-# ---------------------------------------------------------------------------
+
 
 def detect_language(client, text: str) -> str:
     """Metnin dilini Unicode ve kelime analizi ile tespit eder. API çağrısı yapmaz."""
