@@ -454,5 +454,88 @@
     "session_id": "20260327_104600",
     "date": "2026-03-27 10:47:18",
     "messages": []
+  },
+  {
+    "session_id": "20260327_105026",
+    "date": "2026-03-27 10:53:55",
+    "messages": [
+      {
+        "role": "user",
+        "content": "[Misafirin dili: Türkçe] bugününün tarihi ne"
+      },
+      {
+        "role": "assistant",
+        "content": "Bugünün tarihi 27 Mart 2026."
+      },
+      {
+        "role": "user",
+        "content": "[Misafirin dili: Türkçe] 40 gün sonrasının tarihi ne"
+      },
+      {
+        "role": "assistant",
+        "content": "Bugünün tarihi 27 Mart 2026 olduğu için, 40 gün sonrasının tarihi 6 Mayıs 2026 olacaktır."
+      },
+      {
+        "role": "user",
+        "content": "[Misafirin dili: Türkçe] hangi dilleri konuşabiliyorsun"
+      },
+      {
+        "role": "assistant",
+        "content": "Renata Suites Boutique Hotel'in resepsiyon asistanı olarak Türkçe, İngilizce, Almanca ve Fransızca dillerini konuşabiliyorum."
+      },
+      {
+        "role": "user",
+        "content": "[Misafirin dili: Türkçe] elinde kaç apart pda var yarın için"
+      },
+      {
+        "role": "assistant",
+        "content": "Yarın için 6 adet apart odaya sahibiz."
+      },
+      {
+        "role": "user",
+        "content": "[Misafirin dili: Türkçe] 4 nisanda kaç apart odan var"
+      },
+      {
+        "role": "assistant",
+        "content": "4 Nisan için 6 adet apart odaya sahibiz."
+      },
+      {
+        "role": "user",
+        "content": "[Misafirin dili: Türkçe] 5 nisan?"
+      },
+      {
+        "role": "assistant",
+        "content": "5 Nisan için 7 adet apart odaya sahibiz."
+      },
+      {
+        "role": "user",
+        "content": "[Misafirin dili: Türkçe] tamamdır teşekkürler"
+      },
+      {
+        "role": "assistant",
+        "content": "Rica ederim, iyi günler dilerim! Renata Suites Boutique Hotel'de görüntüleyebiliriz."
+      },
+      {
+        "role": "user",
+        "content": "[Misafirin dili: Türkçe] ne"
+      },
+      {
+        "role": "assistant",
+        "content": "Sanırım yanlış anlaşılma oldu. Yardımcı olabileceğim bir şey var mı?"
+      },
+      {
+        "role": "user",
+        "content": "[Misafirin dili: Türkçe] en son ne demek istedin"
+      },
+      {
+        "role": "assistant",
+        "content": "En son \"Rica ederim, iyi günler dilerim! Renata Suites Boutique Hotel'de görüntüleyebiliriz.\" demiştim. Ancak sanki cümle tamamlanmamış gibi geldi, o yüzden tekrar sordum."
+      }
+    ]
+  },
+  {
+    "session_id": "20260327_112040",
+    "date": "2026-03-27 11:20:52",
+    "messages": []
   }
 ]

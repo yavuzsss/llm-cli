@@ -218,3 +218,33 @@ Lütfen bu bilgileri verirseniz, size uygun olan odaları kontrol edebiliriz.
 2026-03-27 10:46:00 [INFO] Oturum başladı. ID: 20260327_104600 | Model: llama-3.3-70b-versatile
 2026-03-27 10:47:18 [INFO] Konuşma geçmişi kaydedildi: conversation_history.json
 2026-03-27 10:47:18 [INFO] Oturum sonlandırıldı: 20260327_104600
+2026-03-27 10:50:26 [INFO] Oturum başladı. ID: 20260327_105026 | Model: llama-3.3-70b-versatile
+2026-03-27 10:50:47 [DEBUG] Misafir: bugününün tarihi ne
+2026-03-27 10:50:47 [DEBUG] Resepsiyon: Bugünün tarihi 27 Mart 2026.
+2026-03-27 10:50:56 [DEBUG] Misafir: 40 gün sonrasının tarihi ne
+2026-03-27 10:50:57 [DEBUG] Resepsiyon: Bugünün tarihi 27 Mart 2026 olduğu için, 40 gün sonrasının tarihi 6 Mayıs 2026 olacaktır.
+2026-03-27 10:51:19 [DEBUG] Misafir: hangi dilleri konuşabiliyorsun
+2026-03-27 10:51:20 [DEBUG] Resepsiyon: Renata Suites Boutique Hotel'in resepsiyon asistanı olarak Türkçe, İngilizce, Almanca ve Fransızca dillerini konuşabiliyorum.
+2026-03-27 10:51:58 [DEBUG] Misafir: elinde kaç apart pda var yarın için
+2026-03-27 10:51:59 [DEBUG] Tool çağrıldı: check_availability, args: {'checkin_date': '2026-03-28', 'checkout_date': '2026-03-29', 'room_type': 'apart'}
+2026-03-27 10:51:59 [DEBUG] Tool sonucu: {'checkin_date': '2026-03-28', 'checkout_date': '2026-03-29', 'nights': 1, 'availability': {'apart': {'capacity': 7, 'available': 6, 'price_per_night': 9000}}}
+2026-03-27 10:51:59 [DEBUG] Resepsiyon: Yarın için 6 adet apart odaya sahibiz.
+2026-03-27 10:52:21 [DEBUG] Misafir: 4 nisanda kaç apart odan var
+2026-03-27 10:52:22 [DEBUG] Tool çağrıldı: check_availability, args: {'checkin_date': '2026-04-04', 'checkout_date': '2026-04-05', 'room_type': 'apart'}
+2026-03-27 10:52:22 [DEBUG] Tool sonucu: {'checkin_date': '2026-04-04', 'checkout_date': '2026-04-05', 'nights': 1, 'availability': {'apart': {'capacity': 7, 'available': 6, 'price_per_night': 9000}}}
+2026-03-27 10:52:22 [DEBUG] Resepsiyon: 4 Nisan için 6 adet apart odaya sahibiz.
+2026-03-27 10:52:29 [DEBUG] Misafir: 5 nisan?
+2026-03-27 10:52:30 [DEBUG] Tool çağrıldı: check_availability, args: {'checkin_date': '2026-04-05', 'checkout_date': '2026-04-06', 'room_type': 'apart'}
+2026-03-27 10:52:30 [DEBUG] Tool sonucu: {'checkin_date': '2026-04-05', 'checkout_date': '2026-04-06', 'nights': 1, 'availability': {'apart': {'capacity': 7, 'available': 7, 'price_per_night': 9000}}}
+2026-03-27 10:52:30 [DEBUG] Resepsiyon: 5 Nisan için 7 adet apart odaya sahibiz.
+2026-03-27 10:53:00 [DEBUG] Misafir: tamamdır teşekkürler
+2026-03-27 10:53:01 [DEBUG] Resepsiyon: Rica ederim, iyi günler dilerim! Renata Suites Boutique Hotel'de görüntüleyebiliriz.
+2026-03-27 10:53:21 [DEBUG] Misafir: ne
+2026-03-27 10:53:21 [DEBUG] Resepsiyon: Sanırım yanlış anlaşılma oldu. Yardımcı olabileceğim bir şey var mı?
+2026-03-27 10:53:33 [DEBUG] Misafir: en son ne demek istedin
+2026-03-27 10:53:33 [DEBUG] Resepsiyon: En son "Rica ederim, iyi günler dilerim! Renata Suites Boutique Hotel'de görüntüleyebiliriz." demiştim. Ancak sanki cümle tamamlanmamış gibi geldi, o yüzden tekrar sordum.
+2026-03-27 10:53:55 [INFO] Konuşma geçmişi kaydedildi: conversation_history.json
+2026-03-27 10:53:55 [INFO] Oturum sonlandırıldı: 20260327_105026
+2026-03-27 11:20:40 [INFO] Oturum başladı. ID: 20260327_112040 | Model: llama-3.3-70b-versatile
+2026-03-27 11:20:52 [INFO] Konuşma geçmişi kaydedildi: conversation_history.json
+2026-03-27 11:20:52 [INFO] Oturum sonlandırıldı: 20260327_112040

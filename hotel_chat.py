@@ -181,19 +181,6 @@ logger = setup_logging()
 # Tool fonksiyonları — asistanın çağırabileceği araçlar
 # ---------------------------------------------------------------------------
 
-def get_current_date() -> dict:
-    """Bugünün tarihini ve saatini döndürür."""
-    now = datetime.now()
-    tomorrow = now + timedelta(days=1)
-    return {
-        "today": now.strftime("%Y-%m-%d"),
-        "today_formatted": now.strftime("%d %B %Y, %A"),
-        "time": now.strftime("%H:%M"),
-        "tomorrow": tomorrow.strftime("%Y-%m-%d"),
-        "tomorrow_formatted": tomorrow.strftime("%d %B %Y, %A")
-    }
-
-
 def check_availability(checkin_date: str, checkout_date: str, room_type: str = None) -> dict:
     """Belirli tarihler için oda müsaitliğini kontrol eder."""
     # Boş string gelirse None olarak işle
@@ -735,7 +722,7 @@ def show_reservations():
 # Ana döngü
 # ---------------------------------------------------------------------------
 
-def detect_language(client, text: str) -> str:
+def detect_language(text: str) -> str:
     """Metnin dilini Unicode ve kelime analizi ile tespit eder. API çağrısı yapmaz."""
     text_lower = text.lower().strip()
 
@@ -754,7 +741,7 @@ def detect_language(client, text: str) -> str:
         return "Almanca"
 
     # Fransızca özel karakterler
-    fransizca_chars = set("àâæçéèêëîïôœùûüÿÀÂÆÇÉÈÊËÎÏÔŒÙÛÜŸ")
+    fransizca_chars = set("àâæéèêëîïôœùûüÿÀÂÆÉÈÊËÎÏÔŒÙÛÜŸ")  # ç kaldırıldı, Türkçe ile çakışıyordu
     if any(c in fransizca_chars for c in text):
         return "Fransızca"
 
@@ -826,8 +813,8 @@ def main():
             show_reservations()
             continue
 
-        # Misafirin dilini LLM ile tespit edip mesaja ekle — asistan doğru dilde cevap versin
-        detected_lang = detect_language(None, user_input)
+        # Misafirin dilini Unicode analizi ile tespit edip mesaja ekle — asistan doğru dilde cevap versin
+        detected_lang = detect_language(user_input)
         enriched_input = f"[Misafirin dili: {detected_lang}] {user_input}"
         messages.append({"role": "user", "content": enriched_input})
         logger.debug("Misafir: %s", user_input)
