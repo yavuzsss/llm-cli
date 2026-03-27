@@ -148,3 +148,73 @@ Once I have this information, I can check the availability of your room for the 
 2026-03-19 15:25:53 [INFO] Oturum başladı. ID: 20260319_152553 | Model: llama-3.3-70b-versatile
 2026-03-19 15:25:56 [INFO] Konuşma geçmişi kaydedildi: conversation_history.json
 2026-03-19 15:25:56 [INFO] Oturum sonlandırıldı: 20260319_152553
+2026-03-27 10:13:00 [INFO] Oturum başladı. ID: 20260327_101300 | Model: llama-3.3-70b-versatile
+2026-03-27 10:13:05 [DEBUG] Tespit edilen dil: Türkçe (skor: {'Türkçe': 1, 'İngilizce': 0, 'Almanca': 0, 'Fransızca': 0})
+2026-03-27 10:13:05 [DEBUG] Misafir: merhaba
+2026-03-27 10:13:05 [DEBUG] Resepsiyon: Merhaba, Renata Suites Boutique Hotel'e hoş geldiniz! Nasıl yardımcı olabiliriz?
+2026-03-27 10:13:23 [DEBUG] Misafir: rezervasyon yaptırmak isitorum
+2026-03-27 10:13:24 [DEBUG] Resepsiyon: Rezervasyon yaptırmak istediğiniz için teşekkür ederiz. Rezervasyon bilgileri için aşağıdaki soruları cevaplayabilir misiniz:
+1. Adınız ve soyadınız nedir?
+2. Hangi oda tipini tercih ediyorsunuz? (Standart, Deluxe, Suite, Apart)
+3. Giriş tarihi ve çıkış tarihi nedir?
+4. Kaç misafiriniz var?
+Lütfen bu bilgileri verirseniz, size uygun olan odaları kontrol edebiliriz.
+2026-03-27 10:14:37 [DEBUG] Misafir: adım ismail alp apart oda istiyorum yarından itibare 1 hafta tek kişi kalacağım
+2026-03-27 10:14:38 [DEBUG] Tool çağrıldı: check_availability, args: {'checkin_date': '2026-03-28', 'checkout_date': '2026-04-04', 'room_type': 'apart'}
+2026-03-27 10:14:38 [DEBUG] Tool sonucu: {'checkin_date': '2026-03-28', 'checkout_date': '2026-04-04', 'nights': 7, 'availability': {'apart': {'capacity': 7, 'available': 7, 'price_per_night': 9000}}}
+2026-03-27 10:14:39 [DEBUG] Resepsiyon: Merhaba Ismail Alp, apart odalarda 28 Mart 2026 ile 4 Nisan 2026 tarihleri arasında müsaitlik mevcut. Toplam 7 gece konaklama ücreti 63.000 TL'dir. Rezervasyon yaptırmak ister misiniz?
+2026-03-27 10:14:47 [DEBUG] Tespit edilen dil: Türkçe (skor: {'Türkçe': 1, 'İngilizce': 0, 'Almanca': 0, 'Fransızca': 0})
+2026-03-27 10:14:47 [DEBUG] Misafir: evet
+2026-03-27 10:14:48 [DEBUG] Tool çağrıldı: make_reservation, args: {'checkin_date': '2026-03-28', 'checkout_date': '2026-04-04', 'guest_name': 'Ismail Alp', 'num_guests': 1, 'room_type': 'apart'}
+2026-03-27 10:14:48 [INFO] Rezervasyon oluşturuldu: Ismail Alp - apart - 2026-03-28
+2026-03-27 10:14:48 [DEBUG] Tool sonucu: {'success': True, 'reservation_id': '20260327101448', 'guest_name': 'Ismail Alp', 'room_type': 'apart', 'checkin_date': '2026-03-28', 'checkout_date': '2026-04-04', 'nights': 7, 'price_per_night': 9000, 'total_price': 63000, 'message': 'Rezervasyon başarıyla oluşturuldu!'}
+2026-03-27 10:14:49 [DEBUG] Resepsiyon: Rezervasyonunuz başarıyla oluşturuldu. Rezervasyon numaranız: 20260327101448. Toplam ücret: 63.000 TL. Check-in saatimiz 14:00, check-out saatimiz 12:00'dir. size tekrar hoş geldiniz dileriz.
+2026-03-27 10:15:10 [DEBUG] Misafir: rezervasyonum sisteme kaydedildi mi
+2026-03-27 10:15:11 [ERROR] API hatası: Error code: 400 - {'error': {'message': "Failed to call a function. Please adjust your prompt. See 'failed_generation' for more details.", 'type': 'invalid_request_error', 'code': 'tool_use_failed', 'failed_generation': '<function=get_reservations({"guest_name": "Ismail Alp"})</function>'}}
+2026-03-27 10:17:38 [INFO] Konuşma geçmişi kaydedildi: conversation_history.json
+2026-03-27 10:17:38 [INFO] Oturum sonlandırıldı: 20260327_101300
+2026-03-27 10:18:02 [INFO] Oturum başladı. ID: 20260327_101801 | Model: llama-3.3-70b-versatile
+2026-03-27 10:20:02 [DEBUG] Misafir: merhaba yarına hiç rezervasyon var mı
+2026-03-27 10:20:03 [DEBUG] Resepsiyon: Merhaba! Yarın için rezervasyon durumunu kontrol etmek ister misiniz? <function=check_availability={"checkin_date": "2026-03-28", "checkout_date": "2026-03-29", "room_type": ""}</function>
+2026-03-27 10:20:22 [DEBUG] Tespit edilen dil: Türkçe (skor: {'Türkçe': 1, 'İngilizce': 0, 'Almanca': 0, 'Fransızca': 0})
+2026-03-27 10:20:22 [DEBUG] Misafir: evet
+2026-03-27 10:20:23 [DEBUG] Resepsiyon: Yarın olan rezervasyon durumu kontrol ediliyor... <function=check_availability={"checkin_date": "2026-03-28", "checkout_date": "2026-03-29"}</function>
+2026-03-27 10:35:56 [INFO] Konuşma geçmişi kaydedildi: conversation_history.json
+2026-03-27 10:35:56 [INFO] Oturum sonlandırıldı: 20260327_101801
+2026-03-27 10:36:08 [INFO] Oturum başladı. ID: 20260327_103608 | Model: llama-3.3-70b-versatile
+2026-03-27 10:36:11 [DEBUG] Misafir: merhaba,
+2026-03-27 10:36:12 [DEBUG] Resepsiyon: Merhaba, Renata Suites Boutique Hotel'e hoşgeldiniz! Nasıl yardımcı olabilirim?
+2026-03-27 10:36:28 [DEBUG] Misafir: yarına hiç rezervasyon var mı
+2026-03-27 10:36:28 [DEBUG] Tool çağrıldı: check_availability, args: {'checkin_date': '2026-03-28', 'checkout_date': '2026-03-29', 'room_type': ''}
+2026-03-27 10:36:28 [DEBUG] Tool sonucu: {'checkin_date': '2026-03-28', 'checkout_date': '2026-03-29', 'nights': 1, 'availability': {'standart': {'capacity': 10, 'available': 10, 'price_per_night': 4500}, 'deluxe': {'capacity': 12, 'available': 12, 'price_per_night': 5500}, 'suite': {'capacity': 8, 'available': 8, 'price_per_night': 7500}, 'apart': {'capacity': 7, 'available': 6, 'price_per_night': 9000}}}
+2026-03-27 10:36:29 [DEBUG] Resepsiyon: Yarın için standart, deluxe ve suite odalarda müsaitlik mevcut. Apart odalarda ise 1 oda daha rezervasyon bekliyor. Hangi oda tipini tercih ederdiniz?
+2026-03-27 10:37:36 [DEBUG] Misafir: ben ismail alp
+2026-03-27 10:37:36 [DEBUG] Resepsiyon: Merhaba İsmail Alp, nasıl bir oda tercihin var? Standart, Deluxe, Suite veya Apart odalardan birini tercih edebileceğinizi söyleyebilirim. Hangi oda tipini düşünüyorsun?
+2026-03-27 10:37:48 [DEBUG] Tespit edilen dil: Türkçe (skor: {'Türkçe': 1, 'İngilizce': 0, 'Almanca': 0, 'Fransızca': 0})
+2026-03-27 10:37:48 [DEBUG] Misafir: zaten rezervasyonum var
+2026-03-27 10:37:48 [DEBUG] Tool çağrıldı: get_reservations, args: {'guest_name': 'İsmail Alp'}
+2026-03-27 10:37:48 [DEBUG] Tool sonucu: {'reservations': [], 'total': 0}
+2026-03-27 10:37:49 [DEBUG] Resepsiyon: İsmail Alp, maalesef sistemde sizin adınıza yapılan bir rezervasyon bulunmuyor. Resepsiyonumuza daha подроб bilgi verebilir misiniz?
+2026-03-27 10:38:00 [DEBUG] Misafir: Ismail Alp
+2026-03-27 10:38:01 [DEBUG] Tool çağrıldı: get_reservations, args: {'guest_name': 'İsmail Alp'}
+2026-03-27 10:38:01 [DEBUG] Tool sonucu: {'reservations': [], 'total': 0}
+2026-03-27 10:38:01 [DEBUG] Resepsiyon: İsmail Alp, sistemde sizin adınıza yapılan bir rezervasyon bulunmuyor. Resepsiyonumuza daha ayrıntılı bilgi verebilir misiniz?
+2026-03-27 10:40:01 [INFO] Konuşma geçmişi kaydedildi: conversation_history.json
+2026-03-27 10:40:01 [INFO] Oturum sonlandırıldı: 20260327_103608
+2026-03-27 10:41:34 [INFO] Oturum başladı. ID: 20260327_104133 | Model: llama-3.3-70b-versatile
+2026-03-27 10:41:55 [DEBUG] Misafir: ben Ismail Alp
+2026-03-27 10:41:56 [DEBUG] Resepsiyon: Merhaba Ismail Alp, Renata Suites Boutique Hotel'de sizi ağırlamak bizi mutlu etti. Nasıl yardımCI olabiliriz?
+2026-03-27 10:42:20 [DEBUG] Misafir: rezervasyonumu 1 gün uzatmak istiyorum.
+2026-03-27 10:42:21 [DEBUG] Tool çağrıldı: get_reservations, args: {'guest_name': 'Ismail Alp'}
+2026-03-27 10:42:21 [DEBUG] Tool sonucu: {'reservations': [{'id': '20260327101448', 'guest_name': 'Ismail Alp', 'room_type': 'apart', 'checkin_date': '2026-03-28', 'checkout_date': '2026-04-04', 'num_guests': 1, 'nights': 7, 'price_per_night': 9000, 'total_price': 63000, 'created_at': '2026-03-27 10:14:48'}], 'total': 1}
+2026-03-27 10:42:21 [DEBUG] Tool çağrıldı: extend_reservation, args: {'new_checkout_date': '2026-04-05', 'reservation_id': '20260327101448'}
+2026-03-27 10:42:21 [INFO] Rezervasyon uzatıldı: 20260327101448 → 2026-04-05
+2026-03-27 10:42:21 [DEBUG] Tool sonucu: {'success': True, 'message': 'Rezervasyon başarıyla uzatıldı.', 'reservation_id': '20260327101448', 'guest_name': 'Ismail Alp', 'room_type': 'apart', 'checkin_date': '2026-03-28', 'new_checkout_date': '2026-04-05', 'total_nights': 8, 'total_price': 72000}
+2026-03-27 10:42:22 [DEBUG] Resepsiyon: Merhaba Ismail Alp, rezervasyonunuz başarıyla 1 gün uzatıldı. Yeni çıkış tanggaliniz 2026-04-05. Toplam ücret 72000 TL olur.
+2026-03-27 10:45:49 [DEBUG] Misafir: tamamdır
+2026-03-27 10:45:50 [DEBUG] Resepsiyon: Ismail Alp, teşekkür ederiz. Güzel bir gün geçirmeniz dileğiyle. İhtiyacınız olduğunda bizimle iletişime geçmekten lütfen çekinmeyin. İyi günler dileriz.
+2026-03-27 10:45:57 [INFO] Konuşma geçmişi kaydedildi: conversation_history.json
+2026-03-27 10:45:57 [INFO] Oturum sonlandırıldı: 20260327_104133
+2026-03-27 10:46:00 [INFO] Oturum başladı. ID: 20260327_104600 | Model: llama-3.3-70b-versatile
+2026-03-27 10:47:18 [INFO] Konuşma geçmişi kaydedildi: conversation_history.json
+2026-03-27 10:47:18 [INFO] Oturum sonlandırıldı: 20260327_104600

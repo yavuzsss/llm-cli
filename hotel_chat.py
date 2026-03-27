@@ -106,12 +106,16 @@ REZERVASYON KURALI: Misafir rezervasyon yapmak istediğinde şu bilgileri sıray
 5. Misafir sayısı
 Tüm bilgileri aldıktan sonra make_reservation aracını çağır. Araç başarılı dönerse rezervasyonu onayla ve toplam ücreti göster.
 
+REZERVASYONu SORGULAMA KURALI: Misafir adını söylediğinde veya "rezervasyonum var", "kaydım var" gibi bir şey söylediğinde MUTLAKA get_reservations aracını çağır ve sistemde ara. Aracı çağırmadan "rezervasyon bulunamıyor" deme. Araç sonucuna göre cevap ver.
+
 REZERVASYONu UZATMA KURALI: Misafir rezervasyonunu uzatmak istediğinde:
 1. Önce get_reservations aracını çağır ve misafirin rezervasyonunu bul
 2. Kaç gün uzatmak istediğini öğren
 3. Yeni çıkış tarihini hesapla
 4. extend_reservation aracını çağır
 5. Misafirden tekrar bilgi ISTEME, rezervasyon sistemde zaten kayıtlı
+
+DİL TEMİZLİĞİ: Cevaplarında sadece misafirin dilini kullan. Rusça, Almanca veya başka dillerden kelime karıştırma.
 
 FİYAT HESAPLAMA: Toplam = gecelik fiyat x gece sayısı. Hesaplamayı misafire açıkça göster.
 
@@ -149,9 +153,9 @@ ROOM_PRICES = {
     "apart": 9000
 }
 
-
+# ---------------------------------------------------------------------------
 # Logging
-
+# ---------------------------------------------------------------------------
 
 def setup_logging() -> logging.Logger:
     logger = logging.getLogger("hotel-cli")
@@ -173,9 +177,9 @@ def setup_logging() -> logging.Logger:
 
 logger = setup_logging()
 
-
+# ---------------------------------------------------------------------------
 # Tool fonksiyonları — asistanın çağırabileceği araçlar
-
+# ---------------------------------------------------------------------------
 
 def get_current_date() -> dict:
     """Bugünün tarihini ve saatini döndürür."""
@@ -318,9 +322,9 @@ def make_reservation(guest_name: str, room_type: str, checkin_date: str,
     }
 
 
-
+# ---------------------------------------------------------------------------
 # Rezervasyon dosyası yardımcıları
-
+# ---------------------------------------------------------------------------
 
 def load_reservations() -> list:
     """reservations.json dosyasından rezervasyonları okur.
@@ -344,9 +348,9 @@ def save_reservations(reservations: list):
         json.dump(reservations, f, ensure_ascii=False, indent=2)
 
 
-
+# ---------------------------------------------------------------------------
 # Tool tanımları — asistana hangi araçların olduğunu söylüyoruz
-
+# ---------------------------------------------------------------------------
 
 TOOLS = [
     {
@@ -448,9 +452,9 @@ TOOLS = [
     }
 ]
 
-
+# ---------------------------------------------------------------------------
 # Tool çağrısını çalıştıran fonksiyon
-
+# ---------------------------------------------------------------------------
 
 def get_reservations(guest_name: str = None) -> dict:
     """Kayıtlı rezervasyonları döndürür. guest_name verilirse sadece o misafirin rezervasyonları."""
@@ -536,9 +540,9 @@ def execute_tool(tool_name: str, tool_args: dict) -> str:
     logger.debug("Tool sonucu: %s", result)
     return json.dumps(result, ensure_ascii=False)
 
-
+# ---------------------------------------------------------------------------
 # Agent döngüsü — tool call'ları yönetir
-
+# ---------------------------------------------------------------------------
 
 def run_agent(client: OpenAI, messages: list[dict]) -> str:
     """
@@ -599,9 +603,30 @@ def run_agent(client: OpenAI, messages: list[dict]) -> str:
                 # Asistan düz metin döndürdü
                 full_response = message.content or ""
 
-                # Model bazen tool çağrısını düz metin olarak yazabiliyor
-                # Bu durumda cevabı temizleyip yine de gösteriyoruz
-                clean_response = re.sub(r'<function=\w+>.*?</function>', '', full_response, flags=re.DOTALL).strip()
+                # Model bazen tool çağrısını eski formatta düz metin olarak yazabiliyor
+                # Format 1: <function=name({"key": "val"})></function>
+                # Format 2: <function=name={"key": "val"}</function>
+                malformed_pattern = re.search(
+                    r'<function=(\w+)[=(](\{.*?\})\)?</function>',
+                    full_response, re.DOTALL
+                )
+                if malformed_pattern:
+                    tool_name = malformed_pattern.group(1)
+                    try:
+                        tool_args = json.loads(malformed_pattern.group(2))
+                    except Exception:
+                        tool_args = {}
+
+                    logger.debug("Hatalı format tool yakalandı: %s %s", tool_name, tool_args)
+                    tool_result = execute_tool(tool_name, tool_args)
+
+                    # Tool sonucunu mesaj geçmişine ekleyip döngüyü devam ettir
+                    messages.append({"role": "assistant", "content": full_response})
+                    messages.append({"role": "user", "content": f"[Tool sonucu - {tool_name}]: {tool_result}. Lütfen bu bilgiye dayanarak misafire cevap ver."})
+                    continue
+
+                # Normal temizlik
+                clean_response = re.sub(r'<function=\w+[^>]*>.*?</function>', '', full_response, flags=re.DOTALL).strip()
                 clean_response = re.sub(r'\[Misafirin dili:.*?\]', '', clean_response).strip()
 
                 if clean_response:
@@ -632,9 +657,9 @@ def run_agent(client: OpenAI, messages: list[dict]) -> str:
 
     return full_response
 
-
+# ---------------------------------------------------------------------------
 # Konuşma geçmişini kaydet
-
+# ---------------------------------------------------------------------------
 
 def save_conversation(messages: list[dict], session_id: str):
     """Oturum bitince konuşmayı conversation_history.json dosyasına kaydeder."""
@@ -664,9 +689,9 @@ def save_conversation(messages: list[dict], session_id: str):
 
     logger.info("Konuşma geçmişi kaydedildi: %s", HISTORY_FILE)
 
-
+# ---------------------------------------------------------------------------
 # Yardımcı fonksiyonlar
-
+# ---------------------------------------------------------------------------
 
 def get_client() -> OpenAI:
     if not API_KEY:
@@ -706,9 +731,9 @@ def show_reservations():
         print(f"  Toplam   : {r.get('total_price', '?')} TL")
         print()
 
-
+# ---------------------------------------------------------------------------
 # Ana döngü
-
+# ---------------------------------------------------------------------------
 
 def detect_language(client, text: str) -> str:
     """Metnin dilini Unicode ve kelime analizi ile tespit eder. API çağrısı yapmaz."""
