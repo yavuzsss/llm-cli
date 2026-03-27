@@ -130,6 +130,7 @@ OTEL BİLGİLERİ:
 # Dosya adları
 LOG_FILE = "hotel_chat.log"
 RESERVATIONS_FILE = "reservations.json"
+ARCHIVE_FILE = "reservations_archive.json"
 HISTORY_FILE = "conversation_history.json"
 
 # .env'den ayarları oku
@@ -333,6 +334,49 @@ def save_reservations(reservations: list):
     """Rezervasyonları reservations.json dosyasına yazar."""
     with open(RESERVATIONS_FILE, "w", encoding="utf-8") as f:
         json.dump(reservations, f, ensure_ascii=False, indent=2)
+
+
+def archive_past_reservations():
+    """Çıkış tarihi geçmiş rezervasyonları arşive taşır."""
+    reservations = load_reservations()
+    today = date.today()
+
+    active = []
+    archived = []
+
+    for r in reservations:
+        try:
+            checkout = datetime.strptime(r["checkout_date"], "%Y-%m-%d").date()
+            if checkout < today:
+                archived.append(r)
+            else:
+                active.append(r)
+        except (KeyError, ValueError):
+            active.append(r)
+
+    if not archived:
+        return
+
+    # Arşiv dosyasına ekle
+    existing_archive = []
+    if os.path.exists(ARCHIVE_FILE):
+        try:
+            with open(ARCHIVE_FILE, "r", encoding="utf-8") as f:
+                existing_archive = json.load(f)
+        except Exception:
+            existing_archive = []
+
+    existing_archive.extend(archived)
+
+    with open(ARCHIVE_FILE, "w", encoding="utf-8") as f:
+        json.dump(existing_archive, f, ensure_ascii=False, indent=2)
+
+    # Aktif rezervasyonları kaydet
+    save_reservations(active)
+
+    logger.info("%d rezervasyon arşivlendi.", len(archived))
+    if archived:
+        print(f"\n📦  {len(archived)} eski rezervasyon arşivlendi.\n")
 
 
 # ---------------------------------------------------------------------------
@@ -695,7 +739,7 @@ def print_banner(session_id: str):
     print(f"  Model      : {MODEL}")
     print(f"  API        : {API_BASE_URL}")
     print(f"  Oturum     : {session_id}")
-    print(f"  Rezervasyon: {len(reservations)} kayıt")
+    print(f"  Rezervasyon: {len(reservations)} aktif kayıt")
     print("  Çıkmak için 'exit' veya 'quit' yazın.")
     print("  Rezervasyon listesi için 'rezervasyonlar' yazın.")
     print("=" * 55)
@@ -787,6 +831,10 @@ def main():
     print_banner(session_id)
 
     client = get_client()
+
+    # Program açılınca geçmiş rezervasyonları arşivle
+    archive_past_reservations()
+
     messages: list[dict] = [{"role": "system", "content": build_system_prompt()}]
 
     logger.info("Oturum başladı. ID: %s | Model: %s", session_id, MODEL)

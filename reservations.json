@@ -1,29 +1,5 @@
 [
   {
-    "id": "20260319140648",
-    "guest_name": "yavuz selim şeremetli",
-    "room_type": "suite",
-    "checkin_date": "2026-03-21",
-    "checkout_date": "2026-03-22",
-    "num_guests": 2,
-    "nights": 1,
-    "price_per_night": 7500,
-    "total_price": 7500,
-    "created_at": "2026-03-19 14:06:48"
-  },
-  {
-    "id": "20260319142726",
-    "guest_name": "Jonathan Joestar",
-    "room_type": "standart",
-    "checkin_date": "2026-03-19",
-    "checkout_date": "2026-03-20",
-    "num_guests": 2,
-    "nights": 1,
-    "price_per_night": 4500,
-    "total_price": 4500,
-    "created_at": "2026-03-19 14:27:26"
-  },
-  {
     "id": "20260327101448",
     "guest_name": "Ismail Alp",
     "room_type": "apart",

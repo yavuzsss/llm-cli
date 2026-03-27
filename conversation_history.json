@@ -537,5 +537,27 @@
     "session_id": "20260327_112040",
     "date": "2026-03-27 11:20:52",
     "messages": []
+  },
+  {
+    "session_id": "20260327_122912",
+    "date": "2026-03-27 12:29:54",
+    "messages": [
+      {
+        "role": "user",
+        "content": "[Misafirin dili: Türkçe] arşivdeki rezervasyonlar"
+      },
+      {
+        "role": "assistant",
+        "content": "<Misafirin dili: Türkçe> \n\nİsim soyisim belirtmediğiniz için tüm rezervasyonlar listelendi. \n\nRezervasyon ID: 20260327101448\nMisafir İsmi: Ismail Alp\nOda Tipi: Apart Oda\nGiriş Tarihi: 2026-03-28\nÇıkış Tarihi: 2026-04-05\nMisafir Sayısı: 1\nGece Sayısı: 8\nFiyat (gece başına): 9000 TL\nToplam Fiyat: 72000 TL\n\nRezervasyonunuzu görüntülemek için isim soyisim belirtmeniz yeterlidir."
+      },
+      {
+        "role": "user",
+        "content": "[Misafirin dili: Türkçe] arşiv"
+      },
+      {
+        "role": "assistant",
+        "content": "Arşivde kayıtlı rezervasyonlar şunlardır:\n\nRezervasyon ID: 20260327101448\nMisafir İsmi: Ismail Alp\nOda Tipi: Apart Oda\nGiriş Tarihi: 2026-03-28\nÇıkış Tarihi: 2026-04-05\nMisafir Sayısı: 1\nGece Sayısı: 8\nFiyat (gece başına): 9000 TL\nToplam Fiyat: 72000 TL\n\nRezervasyonunuzu görüntülemek için isim soyisim belirtmeniz yeterlidir."
+      }
+    ]
   }
 ]

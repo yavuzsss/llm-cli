@@ -248,3 +248,39 @@ Lütfen bu bilgileri verirseniz, size uygun olan odaları kontrol edebiliriz.
 2026-03-27 11:20:40 [INFO] Oturum başladı. ID: 20260327_112040 | Model: llama-3.3-70b-versatile
 2026-03-27 11:20:52 [INFO] Konuşma geçmişi kaydedildi: conversation_history.json
 2026-03-27 11:20:52 [INFO] Oturum sonlandırıldı: 20260327_112040
+2026-03-27 12:29:13 [INFO] 2 rezervasyon arşivlendi.
+2026-03-27 12:29:13 [INFO] Oturum başladı. ID: 20260327_122912 | Model: llama-3.3-70b-versatile
+2026-03-27 12:29:30 [DEBUG] Misafir: arşivdeki rezervasyonlar
+2026-03-27 12:29:31 [DEBUG] Tool çağrıldı: get_reservations, args: {'guest_name': ''}
+2026-03-27 12:29:31 [DEBUG] Tool sonucu: {'reservations': [{'id': '20260327101448', 'guest_name': 'Ismail Alp', 'room_type': 'apart', 'checkin_date': '2026-03-28', 'checkout_date': '2026-04-05', 'num_guests': 1, 'nights': 8, 'price_per_night': 9000, 'total_price': 72000, 'created_at': '2026-03-27 10:14:48'}], 'total': 1}
+2026-03-27 12:29:31 [DEBUG] Resepsiyon: <Misafirin dili: Türkçe> 
+
+İsim soyisim belirtmediğiniz için tüm rezervasyonlar listelendi. 
+
+Rezervasyon ID: 20260327101448
+Misafir İsmi: Ismail Alp
+Oda Tipi: Apart Oda
+Giriş Tarihi: 2026-03-28
+Çıkış Tarihi: 2026-04-05
+Misafir Sayısı: 1
+Gece Sayısı: 8
+Fiyat (gece başına): 9000 TL
+Toplam Fiyat: 72000 TL
+
+Rezervasyonunuzu görüntülemek için isim soyisim belirtmeniz yeterlidir.
+2026-03-27 12:29:42 [DEBUG] Misafir: arşiv
+2026-03-27 12:29:42 [DEBUG] Resepsiyon: Arşivde kayıtlı rezervasyonlar şunlardır:
+
+Rezervasyon ID: 20260327101448
+Misafir İsmi: Ismail Alp
+Oda Tipi: Apart Oda
+Giriş Tarihi: 2026-03-28
+Çıkış Tarihi: 2026-04-05
+Misafir Sayısı: 1
+Gece Sayısı: 8
+Fiyat (gece başına): 9000 TL
+Toplam Fiyat: 72000 TL
+
+Rezervasyonunuzu görüntülemek için isim soyisim belirtmeniz yeterlidir.
+2026-03-27 12:29:54 [INFO] Konuşma geçmişi kaydedildi: conversation_history.json
+2026-03-27 12:29:54 [INFO] Oturum sonlandırıldı: 20260327_122912
