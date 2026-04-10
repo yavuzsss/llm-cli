@@ -559,5 +559,69 @@
         "content": "Arşivde kayıtlı rezervasyonlar şunlardır:\n\nRezervasyon ID: 20260327101448\nMisafir İsmi: Ismail Alp\nOda Tipi: Apart Oda\nGiriş Tarihi: 2026-03-28\nÇıkış Tarihi: 2026-04-05\nMisafir Sayısı: 1\nGece Sayısı: 8\nFiyat (gece başına): 9000 TL\nToplam Fiyat: 72000 TL\n\nRezervasyonunuzu görüntülemek için isim soyisim belirtmeniz yeterlidir."
       }
     ]
+  },
+  {
+    "session_id": "20260327_164441",
+    "date": "2026-03-27 16:48:01",
+    "messages": [
+      {
+        "role": "user",
+        "content": "[Misafirin dili: İngilizce] hello"
+      },
+      {
+        "role": "assistant",
+        "content": "Hello! Welcome to Renata Suites Boutique Hotel. How can I assist you today?"
+      },
+      {
+        "role": "user",
+        "content": "[Misafirin dili: Türkçe] resarvations"
+      },
+      {
+        "role": "assistant",
+        "content": "Merhaba, Renata Suites Boutique Hotel'e hoşgeldiniz. Rezervasyonla ilgili bilgi almak istiyor musunuz?"
+      },
+      {
+        "role": "user",
+        "content": "[Misafirin dili: Türkçe] benim adım jonathan hoestar ve 1 nisana 1 gecelik aile odası istiyorum 4 kişi kalacağız"
+      },
+      {
+        "role": "assistant",
+        "content": "Maalesef, sistem 1 Nisan 2024 tarihine rezervasyon yapamıyor. Lütfen bugünden sonraki bir tarih için rezervasyon yapınız. Apart odayı 28 Mart 2026'dan itibaren rezerve edebilirsiniz. Toplam ücret 9000 TL olur."
+      },
+      {
+        "role": "user",
+        "content": "[Misafirin dili: Türkçe] 2024 demedim zaten? 2026 tabiki"
+      },
+      {
+        "role": "assistant",
+        "content": "Özür dilerim, anladım. 1 Nisan 2026 için 1 gecelikApart Suite odası rezervasyonu yapabiliriz. \nTotal ücret: 9000 TL \nRezervasyonu onaylıyor musunuz? \n\n(Ekstra hizmetler veya erken check-in gibi talepleriniz varsa lütfen bana bildirin.)"
+      },
+      {
+        "role": "user",
+        "content": "[Misafirin dili: Türkçe] evet"
+      },
+      {
+        "role": "assistant",
+        "content": "Rezervasyonunuz başarıyla oluşturuldu. Rezervasyon ID'niz: 20260327164749\n\n1 Nisan 2026 için 1 gecelik Apart Suite odası rezervasyonu yapıldı. Toplam ücret: 9000 TL \n\nLütfen check-in sırasında kredi kartınızdan provizyon alınacaktır. \n\nİyi günler dilerim. Renata Suites Boutique Hotel'de güzel bir konaklama geçirmenizi temenni ederim."
+      }
+    ]
+  },
+  {
+    "session_id": "20260327_165932",
+    "date": "2026-03-27 17:57:49",
+    "messages": [
+      {
+        "role": "user",
+        "content": "[Misafirin dili: Türkçe] merhaba"
+      },
+      {
+        "role": "assistant",
+        "content": "Merhaba, Renata Suites Boutique Hotel'e hoş geldiniz! Nasıl yardımcı olabiliriz?"
+      },
+      {
+        "role": "user",
+        "content": "[Misafirin dili: Türkçe] ben ismail alp"
+      }
+    ]
   }
 ]
