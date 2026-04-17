@@ -592,27 +592,43 @@ def main():
         # Konuşma geçmişine ekle
         conversation_history.append({"role": "user", "content": enriched_input})
 
-        try:
-            # SDK agent'ı çalıştırır, tool call'ları otomatik halleder
-            result = Runner.run_sync(
-                agent,
-                conversation_history,
-                max_turns=10
-            )
+        # Hata durumunda 1 kez otomatik tekrar dener
+        for attempt in range(2):
+            try:
+                result = Runner.run_sync(
+                    agent,
+                    conversation_history,
+                    max_turns=10
+                )
 
-            reply = result.final_output
-            print(f"\n🏨 Resepsiyon: {reply}\n")
-            logger.debug("Resepsiyon: %s", reply)
+                reply = result.final_output
+                print(f"\n🏨 Resepsiyon: {reply}\n")
+                logger.debug("Resepsiyon: %s", reply)
+                conversation_history.append({"role": "assistant", "content": reply})
+                break  # Başarılı, döngüden çık
 
-            # Asistanın cevabını geçmişe ekle
-            conversation_history.append({"role": "assistant", "content": reply})
+            except MaxTurnsExceeded:
+                print("\n⚠️  Üzgünüm, isteğinizi işleyemedim. Lütfen tekrar deneyin.\n")
+                logger.warning("MaxTurnsExceeded")
+                break
 
-        except MaxTurnsExceeded:
-            print("\n⚠️  Üzgünüm, isteğinizi işleyemedim. Lütfen tekrar deneyin.\n")
-            logger.warning("MaxTurnsExceeded")
-        except Exception as e:
-            print(f"\n❌  Bir hata oluştu: {e}\n")
-            logger.error("Hata: %s", e)
+            except Exception as e:
+                error_str = str(e)
+                # Tool call format hatası — geçmişi temizleyip tekrar dene
+                if "tool_use_failed" in error_str or "tool call validation" in error_str:
+                    logger.warning("Tool call format hatası, tekrar deneniyor... (deneme %d)", attempt + 1)
+                    if attempt == 0:
+                        # Son user mesajını geçmişten çıkarıp yeniden ekle — model fresh başlasın
+                        if conversation_history and conversation_history[-1]["role"] == "user":
+                            last_msg = conversation_history.pop()
+                            conversation_history.append(last_msg)
+                        continue
+                    else:
+                        print("\n⚠️  Üzgünüm, isteğinizi şu an işleyemedim. Lütfen tekrar deneyin.\n")
+                else:
+                    print(f"\n❌  Bir hata oluştu: {e}\n")
+                    logger.error("Hata: %s", e)
+                break
 
 
 if __name__ == "__main__":
