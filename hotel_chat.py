@@ -1,24 +1,26 @@
 #!/usr/bin/env python3
-# Renata Suites Boutique Hotel resepsiyon chatbotu — OpenAI Agents SDK versiyonu
-# Önceki versiyona göre run_agent, execute_tool, regex hata yakalama tamamen kaldırıldı
-# Bunların hepsi SDK tarafından otomatik olarak halloluyor
+# Yazan: Yavuz Selim Şeremetli (IAU 3. Sınıf - Finallere çalışmaktan kaçarken yazıldı)
+# Pieces of Mind'da Unity ile boğuşmaktan beynim yanınca kafa dağıtmak için yazdım.
+# Eski sürümde regex ile string parçalamaya çalışıyordum tam amelelikti...
+# Şimdi doğrudan OpenAI SDK kullanıyoruz. Groq API harika bu arada.
+# Kendi kasamdaki RTX 4070'i boşuna yormaya gerek yok, bulutta yağ gibi akıyor resmen :D
 
 import os
 import sys
 import json
 import logging
+# import time  # Lazım olur diye ekledim ama kullanmadım şimdilik kalsın
 from datetime import datetime, date, timedelta
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
 from agents import Agent, Runner, function_tool, set_default_openai_client, set_default_openai_api, ModelSettings
 from agents.exceptions import MaxTurnsExceeded
 
+# API key'leri Github'a public pushlayıp patlamamak için dotenv kullanıyoruz
 load_dotenv()
 
-# ---------------------------------------------------------------------------
-# Ayarlar
-# ---------------------------------------------------------------------------
-
+# --- Değişkenler ---
+# Dosya yolları
 LOG_FILE = "hotel_chat.log"
 RESERVATIONS_FILE = "reservations.json"
 ARCHIVE_FILE = "reservations_archive.json"
@@ -27,48 +29,33 @@ MODEL = os.getenv("LLM_MODEL", "llama-3.3-70b-versatile")
 API_KEY = os.getenv("OPENAI_API_KEY")
 API_BASE_URL = os.getenv("MODEL_API_BASE_URL", "https://api.groq.com/openai/v1")
 
-ROOM_CAPACITY = {
-    "standart": 10,
-    "deluxe": 12,
-    "suite": 8,
-    "apart": 7
-}
+# Odaları ve fiyatları dict içine attım.
+# İleride belki veritabanına bağlarım (üşenmezsem)
+ROOM_CAPACITY = {"standart": 10, "deluxe": 12, "suite": 8, "apart": 7}
+ROOM_PRICES = {"standart": 4500, "deluxe": 5500, "suite": 7500, "apart": 9000}
 
-ROOM_PRICES = {
-    "standart": 4500,
-    "deluxe": 5500,
-    "suite": 7500,
-    "apart": 9000
-}
 
-# ---------------------------------------------------------------------------
-# Groq bağlantısını SDK'ya tanıt
-# ---------------------------------------------------------------------------
-
+# --- SDK Ayarları ---
+# Groq client'ı SDK'ya yedirme taktiği. Dokümantasyon okumaktan gözüm çıktı bunu bulana kadar.
 groq_client = AsyncOpenAI(api_key=API_KEY, base_url=API_BASE_URL)
 set_default_openai_client(groq_client)
-set_default_openai_api("chat_completions")  # Groq, Responses API değil Chat Completions kullanıyor
+set_default_openai_api("chat_completions") 
 
-# Groq kullandığımız için OpenAI'ye tracing göndermeye gerek yok
+# SDK'nın gereksiz loglarını kapatıyorum, terminali çok pisletiyor
 from agents import set_tracing_disabled
 set_tracing_disabled(True)
 
-# ---------------------------------------------------------------------------
-# Logging
-# ---------------------------------------------------------------------------
-
-def setup_logging() -> logging.Logger:
+def setup_logging():
+    # Model arka planda saçmalarsa logdan bakıp bulmak için
     logger = logging.getLogger("hotel-cli")
     logger.setLevel(logging.DEBUG)
 
     fh = logging.FileHandler(LOG_FILE, encoding="utf-8")
     fh.setLevel(logging.DEBUG)
-    fh.setFormatter(logging.Formatter(
-        "%(asctime)s [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
-    ))
+    fh.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"))
 
     ch = logging.StreamHandler(sys.stderr)
-    ch.setLevel(logging.WARNING)
+    ch.setLevel(logging.WARNING) # Terminale sadece warning ve error bassın
     ch.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
 
     logger.addHandler(fh)
@@ -77,43 +64,55 @@ def setup_logging() -> logging.Logger:
 
 logger = setup_logging()
 
-# ---------------------------------------------------------------------------
-# Rezervasyon dosyası yardımcıları
-# ---------------------------------------------------------------------------
 
-def load_reservations() -> list:
-    """reservations.json dosyasından geçerli rezervasyonları okur."""
+# --- JSON İşlemleri ---
+
+def load_reservations():
+    # Dosya yoksa crash yemesin diye try-except koydum.
+    # İlk başta burada çok patlıyordu program.
     if not os.path.exists(RESERVATIONS_FILE):
         return []
     try:
         with open(RESERVATIONS_FILE, "r", encoding="utf-8") as f:
             all_reservations = json.load(f)
-        required_fields = {"guest_name", "room_type", "checkin_date", "checkout_date"}
-        return [r for r in all_reservations if required_fields.issubset(r.keys())]
-    except Exception:
+        
+        # İçinde eksik veri olan bozuk kayıtlar varsa onları eliyoruz (filter gibi)
+        req_fields = {"guest_name", "room_type", "checkin_date", "checkout_date"}
+        temp_list = []
+        for r in all_reservations:
+            if req_fields.issubset(r.keys()):
+                temp_list.append(r)
+        return temp_list
+    except Exception as e:
+        # print(f"Okurken hata oldu: {e}") # Debug için koymuştum
         return []
 
-
-def save_reservations(reservations: list):
+def save_reservations(reservations):
+    # Türkçe karakterler json'da unicode ascii olarak görünmesin diye ensure_ascii=False
     with open(RESERVATIONS_FILE, "w", encoding="utf-8") as f:
         json.dump(reservations, f, ensure_ascii=False, indent=2)
 
-
 def archive_past_reservations():
-    """Çıkış tarihi geçmiş rezervasyonları arşive taşır."""
+    # Program her açıldığında tarihi geçmiş rezervasyonları arşive şutluyoruz.
+    # Yoksa json dosyası ileride çok şişer. (Big Data xd)
     reservations = load_reservations()
     today = date.today()
-    active, archived = [], []
+    active_res = []
+    archived_res = []
 
     for r in reservations:
         try:
             checkout = datetime.strptime(r["checkout_date"], "%Y-%m-%d").date()
-            (archived if checkout < today else active).append(r)
+            if checkout < today:
+                archived_res.append(r)
+            else:
+                active_res.append(r)
         except (KeyError, ValueError):
-            active.append(r)
+            # Tarihi parse edemezsek aktifte bırakıyorum şimdilik
+            active_res.append(r) 
 
-    if not archived:
-        return
+    if len(archived_res) == 0:
+        return # Arşivlenecek bir şey yoksa çık
 
     existing_archive = []
     if os.path.exists(ARCHIVE_FILE):
@@ -121,27 +120,24 @@ def archive_past_reservations():
             with open(ARCHIVE_FILE, "r", encoding="utf-8") as f:
                 existing_archive = json.load(f)
         except Exception:
-            pass
+            pass # okuyamazsa boş liste kalsın napalım
 
-    existing_archive.extend(archived)
+    existing_archive.extend(archived_res)
     with open(ARCHIVE_FILE, "w", encoding="utf-8") as f:
         json.dump(existing_archive, f, ensure_ascii=False, indent=2)
 
-    save_reservations(active)
-    logger.info("%d rezervasyon arşivlendi.", len(archived))
-    print(f"\n📦  {len(archived)} eski rezervasyon arşivlendi.\n")
+    save_reservations(active_res)
+    logger.info(f"{len(archived_res)} tane eski kayıt arşivlendi.")
+    print(f"\n📦 {len(archived_res)} eski rezervasyon arşivlendi.\n")
 
-# ---------------------------------------------------------------------------
-# Tool'lar — @function_tool dekoratörü ile tanımlıyoruz
-# SDK bunları otomatik olarak JSON schema'ya çeviriyor
-# ---------------------------------------------------------------------------
+
+# --- TOOL FONKSİYONLARI ---
+# Buraları @function_tool ile sarmalıyoruz ki model bunları kullanabilsin.
 
 @function_tool
 def check_availability(checkin_date: str, checkout_date: str, room_type: str = "") -> str:
     """
-    Belirli tarihler için oda müsaitliğini kontrol eder.
-    checkin_date ve checkout_date YYYY-MM-DD formatında olmalı.
-    room_type: standart, deluxe, suite veya apart. Boş bırakılırsa tüm odalar kontrol edilir.
+    Belirli tarihler arası oda sayıyor. YYYY-MM-DD istiyor her zaman.
     """
     if room_type == "":
         room_type = None
@@ -150,27 +146,32 @@ def check_availability(checkin_date: str, checkout_date: str, room_type: str = "
         checkin = datetime.strptime(checkin_date, "%Y-%m-%d").date()
         checkout = datetime.strptime(checkout_date, "%Y-%m-%d").date()
     except ValueError:
-        return json.dumps({"error": "Tarih formatı hatalı. YYYY-MM-DD formatında olmalı."})
+        return json.dumps({"error": "Tarih formatı patladı hacı, YYYY-MM-DD gönder."})
 
     if checkin >= checkout:
-        return json.dumps({"error": "Çıkış tarihi giriş tarihinden sonra olmalıdır."})
+        return json.dumps({"error": "Çıkış girişten önce olamaz mantıken."})
 
     if checkin < date.today():
-        return json.dumps({"error": "Geçmiş bir tarih için rezervasyon yapılamaz."})
+        return json.dumps({"error": "Zaman makinemiz yok, geçmişe rezervasyon yapamayız :)"})
 
     reservations = load_reservations()
     booked_counts = {}
+    
+    # İstenen tarihler arasındaki her gün için bir sayaç açıyoruz
     current = checkin
     while current < checkout:
         date_str = current.strftime("%Y-%m-%d")
         booked_counts[date_str] = {"standart": 0, "deluxe": 0, "suite": 0, "apart": 0}
         current += timedelta(days=1)
 
+    # Burası biraz spagetti, Big O(n^2) falan oldu galiba ama 
+    # alt tarafı 37 oda var, optimizasyon kasmaya gerek yok bence çalışıyor sonuçta :D
     for res in reservations:
         try:
             res_checkin = datetime.strptime(res["checkin_date"], "%Y-%m-%d").date()
             res_checkout = datetime.strptime(res["checkout_date"], "%Y-%m-%d").date()
             res_room = res["room_type"].lower()
+            
             if res_checkin < checkout and res_checkout > checkin:
                 cur = max(checkin, res_checkin)
                 end = min(checkout, res_checkout)
@@ -179,7 +180,7 @@ def check_availability(checkin_date: str, checkout_date: str, room_type: str = "
                     if date_str in booked_counts and res_room in booked_counts[date_str]:
                         booked_counts[date_str][res_room] += 1
                     cur += timedelta(days=1)
-        except (KeyError, ValueError):
+        except Exception:
             continue
 
     availability = {}
@@ -188,8 +189,11 @@ def check_availability(checkin_date: str, checkout_date: str, room_type: str = "
             continue
         min_available = capacity
         for date_str in booked_counts:
+            # O günkü boş oda sayısını bul
             available = capacity - booked_counts[date_str].get(room, 0)
-            min_available = min(min_available, available)
+            if available < min_available:
+                min_available = available
+                
         availability[room] = {
             "capacity": capacity,
             "available": min_available,
@@ -205,12 +209,9 @@ def check_availability(checkin_date: str, checkout_date: str, room_type: str = "
 
 
 @function_tool
-def make_reservation(guest_name: str, room_type: str, checkin_date: str,
-                     checkout_date: str, num_guests: int) -> str:
+def make_reservation(guest_name: str, room_type: str, checkin_date: str, checkout_date: str, num_guests: int) -> str:
     """
-    Rezervasyon oluşturur ve reservations.json dosyasına kaydeder.
-    room_type: standart, deluxe, suite veya apart
-    Tarihler YYYY-MM-DD formatında olmalı.
+    JSON'a rezervasyon basan fonksiyon.
     """
     avail_result = _check_availability_internal(checkin_date, checkout_date, room_type)
 
@@ -219,16 +220,19 @@ def make_reservation(guest_name: str, room_type: str, checkin_date: str,
 
     room_key = room_type.lower()
     if room_key not in avail_result["availability"]:
-        return json.dumps({"success": False, "message": f"Geçersiz oda tipi: {room_type}"})
+        return json.dumps({"success": False, "message": "Otelde öyle bir oda yok malesef."})
 
     if avail_result["availability"][room_key]["available"] <= 0:
-        return json.dumps({"success": False, "message": f"{checkin_date} - {checkout_date} tarihleri için {room_type} oda müsait değil."})
+        return json.dumps({"success": False, "message": "O tarihlerde odalar ful çekiyor."})
 
     nights = avail_result["nights"]
     price_per_night = ROOM_PRICES.get(room_key, 0)
 
+    # UUID import etmeye üşendim, anlık tarihi string yapıp ID diye yediriyorum xd
+    rez_id = datetime.now().strftime("%Y%m%d%H%M%S")
+    
     reservation = {
-        "id": datetime.now().strftime("%Y%m%d%H%M%S"),
+        "id": rez_id,
         "guest_name": guest_name,
         "room_type": room_key,
         "checkin_date": checkin_date,
@@ -243,7 +247,7 @@ def make_reservation(guest_name: str, room_type: str, checkin_date: str,
     reservations = load_reservations()
     reservations.append(reservation)
     save_reservations(reservations)
-    logger.info("Rezervasyon oluşturuldu: %s - %s - %s", guest_name, room_type, checkin_date)
+    logger.info(f"Yazıldı: {guest_name} - {room_type} - {checkin_date}")
 
     return json.dumps({
         "success": True,
@@ -255,88 +259,86 @@ def make_reservation(guest_name: str, room_type: str, checkin_date: str,
         "nights": nights,
         "price_per_night": price_per_night,
         "total_price": reservation["total_price"],
-        "message": "Rezervasyon başarıyla oluşturuldu!"
+        "message": "Rezervasyon tamam."
     }, ensure_ascii=False)
 
 
 @function_tool
 def get_reservations(guest_name: str = "") -> str:
-    """
-    Kayıtlı rezervasyonları getirir.
-    guest_name verilirse sadece o misafirin rezervasyonları döner.
-    Misafir rezervasyonunu sorduğunda veya adını söylediğinde çağır.
-    """
+    """İsimden rezervasyon buluyor."""
     reservations = load_reservations()
+    sonuclar = []
     if guest_name:
-        reservations = [r for r in reservations if guest_name.lower() in r.get("guest_name", "").lower()]
+        for r in reservations:
+            # küçük harfe çevirip aratıyoruz case sensitive patlamasın diye
+            if guest_name.lower() in r.get("guest_name", "").lower():
+                sonuclar.append(r)
+        reservations = sonuclar
     return json.dumps({"reservations": reservations, "total": len(reservations)}, ensure_ascii=False)
 
 
 @function_tool
 def extend_reservation(reservation_id: str, new_checkout_date: str) -> str:
-    """
-    Mevcut bir rezervasyonun çıkış tarihini uzatır.
-    Önce get_reservations ile rezervasyon ID'sini bul, sonra bu tool'u çağır.
-    """
+    """Günü uzatmak isteyenler için."""
     reservations = load_reservations()
-    target = next((r for r in reservations if r.get("id") == reservation_id), None)
+    target = None
+    for r in reservations:
+        if r.get("id") == reservation_id:
+            target = r
+            break
 
     if not target:
-        return json.dumps({"success": False, "message": f"Rezervasyon bulunamadı: {reservation_id}"})
+        return json.dumps({"success": False, "message": "ID hatalı, bulamadım."})
 
     try:
         new_checkout = datetime.strptime(new_checkout_date, "%Y-%m-%d").date()
         old_checkout = datetime.strptime(target["checkout_date"], "%Y-%m-%d").date()
         checkin = datetime.strptime(target["checkin_date"], "%Y-%m-%d").date()
     except ValueError:
-        return json.dumps({"success": False, "message": "Tarih formatı hatalı."})
+        return json.dumps({"success": False, "message": "Tarih formatında bi gariplik var."})
 
     if new_checkout <= old_checkout:
-        return json.dumps({"success": False, "message": "Yeni çıkış tarihi mevcut tarihten sonra olmalıdır."})
+        return json.dumps({"success": False, "message": "Zaten o gün çıkıyorsun, daha ileri bi tarih seç."})
 
+    # Aradaki uzatılan günlerin müsaitliğini kontrol ediyoruz (sessiz fonksiyonla)
     avail_result = _check_availability_internal(old_checkout.strftime("%Y-%m-%d"), new_checkout_date, target["room_type"])
     if "error" in avail_result:
         return json.dumps({"success": False, "message": avail_result["error"]})
 
     if avail_result["availability"].get(target["room_type"], {}).get("available", 0) <= 0:
-        return json.dumps({"success": False, "message": "Bu tarihler için oda müsait değil."})
+        return json.dumps({"success": False, "message": "Uzatmak istediğin günlerde odalar dolu maalesef."})
 
     new_nights = (new_checkout - checkin).days
     target["checkout_date"] = new_checkout_date
     target["nights"] = new_nights
     target["total_price"] = new_nights * target["price_per_night"]
+    
     save_reservations(reservations)
-    logger.info("Rezervasyon uzatıldı: %s → %s", reservation_id, new_checkout_date)
-
     return json.dumps({
         "success": True,
-        "message": "Rezervasyon başarıyla uzatıldı.",
+        "message": "Uzatıldı.",
         "reservation_id": reservation_id,
         "new_checkout_date": new_checkout_date,
         "total_nights": new_nights,
         "total_price": target["total_price"]
     }, ensure_ascii=False)
 
-# ---------------------------------------------------------------------------
-# Otel bilgileri ve sistem prompt
-# ---------------------------------------------------------------------------
 
-def _check_availability_internal(checkin_date: str, checkout_date: str, room_type: str = None) -> dict:
-    """check_availability'nin iç versiyonu — diğer tool'lar tarafından çağrılır."""
-    if room_type == "" or room_type is None:
-        room_type = None
+# --- Yardımcı / İç Fonksiyonlar ---
+
+def _check_availability_internal(checkin_date, checkout_date, room_type=None):
+    # Model tool içinden tool çağırmasın diye aynı mantığın arka plan versiyonunu yaptım.
+    # Kod tekrarı oldu biraz ama idare eder.
+    if room_type == "": room_type = None
 
     try:
         checkin = datetime.strptime(checkin_date, "%Y-%m-%d").date()
         checkout = datetime.strptime(checkout_date, "%Y-%m-%d").date()
     except ValueError:
-        return {"error": "Tarih formatı hatalı."}
+        return {"error": "Format hatası"}
 
-    if checkin >= checkout:
-        return {"error": "Çıkış tarihi giriş tarihinden sonra olmalıdır."}
-
-    if checkin < date.today():
-        return {"error": "Geçmiş bir tarih için rezervasyon yapılamaz."}
+    if checkin >= checkout: return {"error": "Tarih mantıksız"}
+    if checkin < date.today(): return {"error": "Geçmiş zaman"}
 
     reservations = load_reservations()
     booked_counts = {}
@@ -359,277 +361,160 @@ def _check_availability_internal(checkin_date: str, checkout_date: str, room_typ
                     if date_str in booked_counts and res_room in booked_counts[date_str]:
                         booked_counts[date_str][res_room] += 1
                     cur += timedelta(days=1)
-        except (KeyError, ValueError):
-            continue
+        except Exception:
+            pass
 
     availability = {}
     for room, capacity in ROOM_CAPACITY.items():
-        if room_type and room_type.lower() != room:
-            continue
-        min_available = capacity
+        if room_type and room_type.lower() != room: continue
+        min_avail = capacity
         for date_str in booked_counts:
-            available = capacity - booked_counts[date_str].get(room, 0)
-            min_available = min(min_available, available)
+            min_avail = min(min_avail, capacity - booked_counts[date_str].get(room, 0))
         availability[room] = {
-            "capacity": capacity,
-            "available": min_available,
-            "price_per_night": ROOM_PRICES[room]
+            "capacity": capacity, "available": min_avail, "price_per_night": ROOM_PRICES[room]
         }
-
-    return {
-        "checkin_date": checkin_date,
-        "checkout_date": checkout_date,
-        "nights": (checkout - checkin).days,
-        "availability": availability
-    }
-
-HOTEL_DATA = """
-OTEL BİLGİLERİ:
-- Otel Adı: Renata Suites Boutique Hotel
-- Adres: Nakiye Elgün Sk. No:44, Osmanbey/Şişli, İstanbul
-- Yıldız: 4 yıldızlı butik otel
-- Toplam Oda Sayısı: 37
-
-CHECK-IN / CHECK-OUT:
-- Check-in: 14:00
-- Check-out: 12:00
-- Erken check-in: Talep üzerine, müsaitliğe göre (ek ücret uygulanabilir)
-- Geç check-out: Talep üzerine, müsaitliğe göre (ek ücret uygulanabilir)
-- Temassız (contactless) check-in/check-out imkânı mevcuttur
-
-ODA TİPLERİ VE GECELİK FİYATLAR:
-- Standart Oda: 4500 TL — Klimalı, 46 inç Smart TV, minibar, özel banyo, bornoz ve terlik (10 oda)
-- Deluxe Oda: 5500 TL — Geniş oturma alanı, şehir manzarası, çalışma masası (12 oda)
-- Suite: 7500 TL — 40 m², iş seyahati için ideal, çalışma masası (8 oda)
-- Apart Suite: 9000 TL — 45-53 m², uzun konaklamalar için, mutfak ve çalışma alanı (7 oda)
-
-HİZMETLER:
-- Ücretsiz Wi-Fi (tüm alanlarda)
-- Açık büfe kahvaltı — hafta içi 07:30-10:30, hafta sonu 07:30-11:00 (oda fiyatına dahil)
-- Helal ve glütensiz kahvaltı seçenekleri
-- Restoran, 2 Bar/Lounge
-- Spa, sauna ve buhar odası (ek ücretli)
-- Fitness merkezi, Oda servisi (24 saat)
-- Vale otopark, Havalimanı transferi (ek ücretli)
-- Kuru temizleme, Toplantı salonu, Concierge (7/24)
-
-KONUM:
-- Taksim Meydanı: 4 dakika (metro ile)
-- Osmanbey Metro: Yürüme mesafesinde
-- İstanbul Havalimanı: 47 km
-
-ÖDEME: Visa, Mastercard, Amex, Nakit
-DEPOZITO: Check-in sırasında kredi kartından provizyon alınır
-
-İLETİŞİM:
-- Telefon: +90 212 282 42 42
-- E-posta: info@renatahotel.com
-- Web: www.renatahotel.com
-"""
+    return {"checkin_date": checkin_date, "checkout_date": checkout_date, "nights": (checkout - checkin).days, "availability": availability}
 
 
-def build_instructions() -> str:
-    """Her oturum başında güncel tarihle sistem talimatları oluşturur."""
+def detect_language(text: str) -> str:
+    # Model bazen dili karıştırıyor (loglarda Sagen falan yazmıştı hatırlarsan). 
+    # Normalde buraya spacy falan kurulur da 2 kelime için kütüphane kasmak istemedim.
+    # Bodoslama if-else check yapıyorum.
+    if any(c in "çğışöüÇĞİŞÖÜ" for c in text): return "Türkçe"
+    if any(c in "äöüßÄÖÜ" for c in text): return "Almanca"
+    
+    english_words = ["hello", "hi", "hey", "good", "please", "yes", "no", "room"]
+    german_words = ["hallo", "bitte", "danke", "ja", "nein", "ich", "bin"]
+    turkish_words = ["merhaba", "selam", "evet", "hayır", "lütfen", "nasıl", "oda"]
+
+    metin = text.lower()
+    
+    tr_count = sum(1 for w in turkish_words if w in metin)
+    en_count = sum(1 for w in english_words if w in metin)
+    de_count = sum(1 for w in german_words if w in metin)
+    
+    if en_count > tr_count and en_count > de_count: return "İngilizce"
+    if de_count > tr_count and de_count > en_count: return "Almanca"
+    
+    return "Türkçe" # default
+
+
+def build_instructions():
+    # Promptu dinamik basıyorum ki model bugünü bilsin.
     now = datetime.now()
-    tomorrow = now + timedelta(days=1)
-    return f"""Sen Renata Suites Boutique Hotel'in profesyonel ve güler yüzlü resepsiyon asistanısın.
+    yarın = now + timedelta(days=1)
+    
+    return f"""Sen Renata Suites Boutique Hotel'in asistanısın.
 
-BUGÜNÜN TARİHİ: {now.strftime("%d %B %Y")} — Saat: {now.strftime("%H:%M")}
-YARIN: {tomorrow.strftime("%d %B %Y")}
-"Yarın", "bu hafta sonu" gibi ifadeleri yukarıdaki tarihe göre YYYY-MM-DD formatına çevir.
+BUGÜN: {now.strftime("%d %B %Y")} — Saat: {now.strftime("%H:%M")}
+YARIN: {yarın.strftime("%d %B %Y")}
 
-DİL KURALI: Misafirin yazdığı dilde cevap ver. Asla dil karıştırma.
-- Türkçe mesaj → Türkçe cevap
-- İngilizce mesaj → İngilizce cevap
-- Almanca mesaj → Almanca cevap
+KURAL: Misafir nece yazıyorsa o dilde cevap ver. Karıştırma.
 
-MÜSAİTLİK: Oda sorulduğunda check_availability çağır. Selamlama ve genel sorularda tool çağırma.
-
-REZERVASYON KURALI (ÇOK ÖNEMLİ):
-- make_reservation çağırmadan önce şu 5 bilgiyi MUTLAKA topla:
-  1. Ad Soyad — misafir söylemeden asla varsayma, sor
-  2. Oda tipi (standart / deluxe / suite / apart)
+ÇOK ÖNEMLİ:
+- make_reservation çağırmadan önce kesinlikle şu bilgileri topla:
+  1. Ad Soyad
+  2. Oda tipi
   3. Giriş tarihi
   4. Çıkış tarihi  
   5. Misafir sayısı
-- Eksik bilgi varsa make_reservation ÇAĞIRMA, önce sor
-- guest_name alanına asla "misafir", "guest" veya boş değer yazma
+- Eksik bilgi varsa toolu kullanma, misafire sor.
+- guest_name alanına kafandan isim uydurma.
 
-SORGULAMA: Misafir adını söylediğinde veya rezervasyonunu sorduğunda get_reservations çağır.
-Çağırmadan "rezervasyon bulunamıyor" deme.
-
-UZATMA: Önce get_reservations ile ID bul, sonra extend_reservation çağır.
-
-FİYAT: Toplam = gecelik fiyat x gece sayısı. Hesabı açıkça göster.
-
-GENEL: Kısa ve samimi cevaplar ver. Sadece otel konularında yardımcı ol.
-
-{HOTEL_DATA}"""
-
-# ---------------------------------------------------------------------------
-# Dil tespiti
-# ---------------------------------------------------------------------------
-
-def detect_language(text: str) -> str:
-    """Unicode ve kelime analizi ile dil tespiti yapar. API çağrısı yapmaz."""
-    if any("\u0600" <= c <= "\u06ff" for c in text):
-        return "Arapça"
-
-    if any(c in "çğışöüÇĞİŞÖÜ" for c in text):
-        return "Türkçe"
-
-    if any(c in "äöüßÄÖÜ" for c in text):
-        return "Almanca"
-
-    if any(c in "àâæéèêëîïôœùûüÿÀÂÆÉÈÊËÎÏÔŒÙÛÜŸ" for c in text):
-        return "Fransızca"
-
-    english = {"hello","hi","hey","good","please","thank","thanks","yes","no",
-               "what","how","i","we","need","want","room","book","can","the","a"}
-    german = {"guten","hallo","bitte","danke","ja","nein","ich","bin","sie","und","nicht"}
-    french = {"bonjour","bonsoir","merci","oui","non","je","vous","nous","avec","pour"}
-    turkish = {"merhaba","selam","evet","hayır","lütfen","nasıl","iyi","tamam",
-               "rezervasyon","oda","yarın","bugün","istiyorum","var","yok"}
-
-    words = set(text.lower().split())
-    scores = {
-        "Türkçe": len(words & turkish),
-        "İngilizce": len(words & english),
-        "Almanca": len(words & german),
-        "Fransızca": len(words & french),
-    }
-    best = max(scores, key=scores.get)
-    return best if scores[best] > 0 else "Türkçe"
-
-# ---------------------------------------------------------------------------
-# Terminal yardımcıları
-# ---------------------------------------------------------------------------
+Otel Adres: Nakiye Elgün Sk. No:44, Osmanbey/Şişli
+Odalar: Standart (4500 TL), Deluxe (5500 TL), Suite (7500 TL), Apart (9000 TL)
+"""
 
 def show_reservations():
+    # Hızlıca terminalden db kontrol etmek için
     reservations = load_reservations()
     if not reservations:
-        print("\n📋 Henüz aktif rezervasyon yok.\n")
+        print("\n📋 Kayıt yok.\n")
         return
-    print(f"\n📋 Toplam {len(reservations)} aktif rezervasyon:\n")
+    print(f"\n📋 Aktif Rezervasyonlar ({len(reservations)} tane):\n")
     for r in reservations:
-        print(f"  [{r.get('created_at', '?')}]")
-        print(f"  Misafir : {r.get('guest_name', '?')}")
-        print(f"  Oda     : {r.get('room_type', '?')}")
-        print(f"  Giriş   : {r.get('checkin_date', '?')}")
-        print(f"  Çıkış   : {r.get('checkout_date', '?')}")
-        print(f"  Toplam  : {r.get('total_price', '?')} TL")
-        print()
+        print(f"  {r.get('guest_name', '?')} | {r.get('room_type', '?')} | {r.get('checkin_date', '?')} | {r.get('total_price', '?')} TL")
+    print()
 
 
-def print_banner(session_id: str):
-    reservations = load_reservations()
-    print("=" * 55)
-    print("  🏨  Renata Suites Boutique Hotel — Resepsiyon")
-    print(f"  Model      : {MODEL}")
-    print(f"  API        : {API_BASE_URL}")
-    print(f"  Oturum     : {session_id}")
-    print(f"  Rezervasyon: {len(reservations)} aktif kayıt")
-    print("  Çıkmak için 'exit' veya 'quit' yazın.")
-    print("  Rezervasyon listesi için 'rezervasyonlar' yazın.")
-    print("=" * 55)
-    print("\nHoş geldiniz! / Welcome! / Willkommen!\n")
-
-# ---------------------------------------------------------------------------
-# Ana döngü
-# ---------------------------------------------------------------------------
+# --- ANA DÖNGÜ ---
 
 def main():
     if not API_KEY:
-        print("\n❌  API anahtarı bulunamadı. Lütfen .env dosyanızı kontrol edin.\n")
+        print("\n❌ Kanka .env dosyasında key yok, patlar bu.\n")
         sys.exit(1)
 
     session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    # Geçmiş rezervasyonları arşivle
+    # Başlarken bi çöpleri dökelim
     archive_past_reservations()
 
-    print_banner(session_id)
+    print("=" * 55)
+    print("  🏨 Renata Suites Boutique Hotel")
+    print(f"  Model : {MODEL}")
+    print("  Çıkmak için 'exit' yaz. Liste için 'rezervasyonlar'.")
+    print("=" * 55)
+    print("\nHoş geldiniz!\n")
 
-    # Agent'ı oluştur — tool'lar ve talimatlarla birlikte
     agent = Agent(
-        name="Renata Resepsiyon",
+        name="Renata Asistan",
         model=MODEL,
         instructions=build_instructions(),
         tools=[check_availability, make_reservation, get_reservations, extend_reservation],
         model_settings=ModelSettings(parallel_tool_calls=False)
     )
 
-    logger.info("Oturum başladı. ID: %s | Model: %s", session_id, MODEL)
-
-    # Konuşma geçmişini tutan liste — SDK bunu otomatik yönetiyor
     conversation_history = []
 
     while True:
         try:
             user_input = input("💬 Misafir: ").strip()
         except (EOFError, KeyboardInterrupt):
-            print("\n\n👋  İyi günler dileriz! / Goodbye!\n")
-            logger.info("Oturum sonlandırıldı: %s", session_id)
+            print("\n👋 Kapatılıyor...\n")
             break
 
         if not user_input:
             continue
 
-        if user_input.lower() in {"exit", "quit"}:
-            print("\n👋  İyi günler dileriz! / Goodbye!\n")
-            logger.info("Oturum sonlandırıldı: %s", session_id)
+        if user_input.lower() in ["exit", "quit", "çık"]:
+            print("\n👋 Kapatılıyor...\n")
             break
 
         if user_input.lower() == "rezervasyonlar":
             show_reservations()
             continue
 
-        # Dil tespiti yapıp mesaja ekle
-        detected_lang = detect_language(user_input)
-        enriched_input = f"[Misafirin dili: {detected_lang}] {user_input}"
-        logger.debug("Misafir (%s): %s", detected_lang, user_input)
+        # Dil taktiğini buraya yapıştırdım
+        lang = detect_language(user_input)
+        gizli_prompt = f"[Misafirin dili: {lang}] {user_input}"
+        
+        conversation_history.append({"role": "user", "content": gizli_prompt})
 
-        # Konuşma geçmişine ekle
-        conversation_history.append({"role": "user", "content": enriched_input})
-
-        # Hata durumunda 1 kez otomatik tekrar dener
-        for attempt in range(2):
+        # Model timeout atarsa falan diye 2 deneme hakkı var
+        for deneme in range(2):
             try:
-                result = Runner.run_sync(
-                    agent,
-                    conversation_history,
-                    max_turns=10
-                )
-
-                reply = result.final_output
-                print(f"\n🏨 Resepsiyon: {reply}\n")
-                logger.debug("Resepsiyon: %s", reply)
-                conversation_history.append({"role": "assistant", "content": reply})
-                break  # Başarılı, döngüden çık
+                result = Runner.run_sync(agent, conversation_history, max_turns=10)
+                cevap = result.final_output
+                print(f"\n🏨 Resepsiyon: {cevap}\n")
+                conversation_history.append({"role": "assistant", "content": cevap})
+                break 
 
             except MaxTurnsExceeded:
-                print("\n⚠️  Üzgünüm, isteğinizi işleyemedim. Lütfen tekrar deneyin.\n")
-                logger.warning("MaxTurnsExceeded")
+                print("\n⚠️ Anlayamadım, baştan yazar mısın?\n")
                 break
-
             except Exception as e:
-                error_str = str(e)
-                # Tool call format hatası — geçmişi temizleyip tekrar dene
-                if "tool_use_failed" in error_str or "tool call validation" in error_str:
-                    logger.warning("Tool call format hatası, tekrar deneniyor... (deneme %d)", attempt + 1)
-                    if attempt == 0:
-                        # Son user mesajını geçmişten çıkarıp yeniden ekle — model fresh başlasın
-                        if conversation_history and conversation_history[-1]["role"] == "user":
-                            last_msg = conversation_history.pop()
-                            conversation_history.append(last_msg)
+                hata_msaji = str(e)
+                # Model tool kullanmayı beceremezse context'i yenileyip şans veriyoruz
+                if "tool_use_failed" in hata_msaji or "tool call validation" in hata_msaji:
+                    if deneme == 0 and conversation_history and conversation_history[-1]["role"] == "user":
+                        # Son mesajı çek çıkar yap ki model kendine gelsin
+                        conversation_history.append(conversation_history.pop())
                         continue
                     else:
-                        print("\n⚠️  Üzgünüm, isteğinizi şu an işleyemedim. Lütfen tekrar deneyin.\n")
+                        print("\n⚠️ API'de bi anlık sıkıntı oldu galiba, tekrar yazar mısın.\n")
                 else:
-                    print(f"\n❌  Bir hata oluştu: {e}\n")
-                    logger.error("Hata: %s", e)
+                    print(f"\n❌ Beklenmeyen hata: {e}\n")
                 break
-
 
 if __name__ == "__main__":
     main()
