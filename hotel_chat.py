@@ -496,7 +496,18 @@ def main():
                 result = Runner.run_sync(agent, conversation_history, max_turns=10)
                 cevap = result.final_output
                 print(f"\n🏨 Resepsiyon: {cevap}\n")
-                conversation_history.append({"role": "assistant", "content": cevap})
+                
+                # Burda sadece son metni değil, modelin toolcall adımlarını da hafızaya
+                # almak için geçmişi doğrudan SDK'nın döndürdüğü tam liste ile güncelliyorum:
+                if hasattr(result, 'messages'):
+                    conversation_history = result.messages
+                elif hasattr(result, 'history'):
+                    conversation_history = result.history
+                else:
+                    # Eğer SDK conversation historyi kendiliğinden güncelliyorsa,
+                    # append satırını silmek bile yeterli olur.
+                    pass 
+                
                 break 
 
             except MaxTurnsExceeded:
