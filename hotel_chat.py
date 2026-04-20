@@ -26,19 +26,19 @@ MODEL = os.getenv("LLM_MODEL", "llama-3.3-70b-versatile")
 API_KEY = os.getenv("OPENAI_API_KEY")
 API_BASE_URL = os.getenv("MODEL_API_BASE_URL", "https://api.groq.com/openai/v1")
 
-# Odaları ve fiyatları dict içine attım.
-# İleride belki veritabanına bağlarım (üşenmezsem)
+# Odaları ve fiyatları dict içine attım
+# İleride belki veritabanına bağlarım
 ROOM_CAPACITY = {"standart": 10, "deluxe": 12, "suite": 8, "apart": 7}
 ROOM_PRICES = {"standart": 4500, "deluxe": 5500, "suite": 7500, "apart": 9000}
 
 
 # --- SDK Ayarları ---
-# Groq client'ı SDK'ya yedirme taktiği. Dokümantasyon okumaktan gözüm çıktı bunu bulana kadar.
+# Yapay zeka bağlantısı
 groq_client = AsyncOpenAI(api_key=API_KEY, base_url=API_BASE_URL)
 set_default_openai_client(groq_client)
 set_default_openai_api("chat_completions") 
 
-# SDK'nın gereksiz loglarını kapatıyorum, terminali çok pisletiyor
+# SDKnın gereksiz loglarını kapatma
 from agents import set_tracing_disabled
 set_tracing_disabled(True)
 
@@ -65,15 +65,14 @@ logger = setup_logging()
 # --- JSON İşlemleri ---
 
 def load_reservations():
-    # Dosya yoksa crash yemesin diye try-except koydum.
-    # İlk başta burada çok patlıyordu program.
+    # Dosya yoksa crash yemesin diye try-except
     if not os.path.exists(RESERVATIONS_FILE):
         return []
     try:
         with open(RESERVATIONS_FILE, "r", encoding="utf-8") as f:
             all_reservations = json.load(f)
         
-        # İçinde eksik veri olan bozuk kayıtlar varsa onları eliyoruz (filter gibi)
+        # İçinde eksik veri olan bozuk kayıtlar varsa onları eliyoruz filter gibi
         req_fields = {"guest_name", "room_type", "checkin_date", "checkout_date"}
         temp_list = []
         for r in all_reservations:
@@ -90,8 +89,7 @@ def save_reservations(reservations):
         json.dump(reservations, f, ensure_ascii=False, indent=2)
 
 def archive_past_reservations():
-    # Program her açıldığında tarihi geçmiş rezervasyonları arşive şutluyoruz.
-    # Yoksa json dosyası ileride çok şişer. (Big Data xd)
+    # Program her açıldığında tarihi geçmiş rezervasyonları arşive şutluyor
     reservations = load_reservations()
     today = date.today()
     active_res = []
@@ -117,7 +115,7 @@ def archive_past_reservations():
             with open(ARCHIVE_FILE, "r", encoding="utf-8") as f:
                 existing_archive = json.load(f)
         except Exception:
-            pass # okuyamazsa boş liste kalsın napalım
+            pass # okuyamazsa boş liste kalsın
 
     existing_archive.extend(archived_res)
     with open(ARCHIVE_FILE, "w", encoding="utf-8") as f:
@@ -129,7 +127,7 @@ def archive_past_reservations():
 
 
 # --- TOOL FONKSİYONLARI ---
-# Buraları @function_tool ile sarmalıyoruz ki model bunları kullanabilsin.
+# Buraları @function_tool ile sarmalıyorum ki model bunları kullanabilsin
 
 @function_tool
 def check_availability(checkin_date: str, checkout_date: str, room_type: str = "") -> str:
@@ -161,8 +159,7 @@ def check_availability(checkin_date: str, checkout_date: str, room_type: str = "
         booked_counts[date_str] = {"standart": 0, "deluxe": 0, "suite": 0, "apart": 0}
         current += timedelta(days=1)
 
-    # Burası biraz spagetti, Big O(n^2) falan oldu galiba ama 
-    # alt tarafı 37 oda var, optimizasyon kasmaya gerek yok bence çalışıyor sonuçta :D
+    # Burası biraz karısık Big O(n^2) falan oldu galiba
     for res in reservations:
         try:
             res_checkin = datetime.strptime(res["checkin_date"], "%Y-%m-%d").date()
@@ -225,7 +222,7 @@ def make_reservation(guest_name: str, room_type: str, checkin_date: str, checkou
     nights = avail_result["nights"]
     price_per_night = ROOM_PRICES.get(room_key, 0)
 
-    # UUID import etmeye üşendim, anlık tarihi string yapıp ID diye yediriyorum xd
+    # anlık tarihi string yapıp ID diye kullanıyorum
     rez_id = datetime.now().strftime("%Y%m%d%H%M%S")
     
     reservation = {
@@ -297,7 +294,7 @@ def extend_reservation(reservation_id: str, new_checkout_date: str) -> str:
     if new_checkout <= old_checkout:
         return json.dumps({"success": False, "message": "Zaten o gün çıkıyorsun, daha ileri bi tarih seç."})
 
-    # Aradaki uzatılan günlerin müsaitliğini kontrol ediyoruz (sessiz fonksiyonla)
+    # Aradaki uzatılan günlerin müsaitliğini kontrol ediyoruz
     avail_result = _check_availability_internal(old_checkout.strftime("%Y-%m-%d"), new_checkout_date, target["room_type"])
     if "error" in avail_result:
         return json.dumps({"success": False, "message": avail_result["error"]})
@@ -321,11 +318,10 @@ def extend_reservation(reservation_id: str, new_checkout_date: str) -> str:
     }, ensure_ascii=False)
 
 
-# --- Yardımcı / İç Fonksiyonlar ---
+# --- Yardımcı Fonksiyonlar ---
 
 def _check_availability_internal(checkin_date, checkout_date, room_type=None):
-    # Model tool içinden tool çağırmasın diye aynı mantığın arka plan versiyonunu yaptım.
-    # Kod tekrarı oldu biraz ama idare eder.
+    # Model tool içinden tool çağırmasın diye aynı mantığın arka plan versiyonunu yaptım
     if room_type == "": room_type = None
 
     try:
@@ -374,9 +370,7 @@ def _check_availability_internal(checkin_date, checkout_date, room_type=None):
 
 
 def detect_language(text: str) -> str:
-    # Model bazen dili karıştırıyor (loglarda Sagen falan yazmıştı hatırlarsan). 
-    # Normalde buraya spacy falan kurulur da 2 kelime için kütüphane kasmak istemedim.
-    # Bodoslama if-else check yapıyorum.
+    # if-else check yapıyorum dil için
     if any(c in "çğışöüÇĞİŞÖÜ" for c in text): return "Türkçe"
     if any(c in "äöüßÄÖÜ" for c in text): return "Almanca"
     
@@ -397,7 +391,7 @@ def detect_language(text: str) -> str:
 
 
 def build_instructions():
-    # Promptu dinamik basıyorum ki model bugünü bilsin.
+    # Prompt dinamik
     now = datetime.now()
     yarın = now + timedelta(days=1)
     
@@ -443,7 +437,6 @@ def main():
 
     session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    # Başlarken bi çöpleri dökelim
     archive_past_reservations()
 
     print("=" * 55)
@@ -481,13 +474,12 @@ def main():
             show_reservations()
             continue
 
-        # Dil taktiğini buraya yapıştırdım
         lang = detect_language(user_input)
         gizli_prompt = f"[Misafirin dili: {lang}] {user_input}"
         
         conversation_history.append({"role": "user", "content": gizli_prompt})
 
-        # Model timeout atarsa falan diye 2 deneme hakkı var
+        # Model timeout atarsa diye 2 deneme hakkı var
         for deneme in range(2):
             try:
                 result = Runner.run_sync(agent, conversation_history, max_turns=10)
@@ -495,13 +487,13 @@ def main():
                 print(f"\n🏨 Resepsiyon: {cevap}\n")
                 
                 # Burda sadece son metni değil, modelin toolcall adımlarını da hafızaya
-                # almak için geçmişi doğrudan SDK'nın döndürdüğü tam liste ile güncelliyorum:
+                # almak için geçmişi doğrudan SDKnın döndürdüğü tam liste ile güncelliyorum
                 if hasattr(result, 'messages'):
                     conversation_history = result.messages
                 elif hasattr(result, 'history'):
                     conversation_history = result.history
                 else:
-                    # Eğer SDK conversation historyi kendiliğinden güncelliyorsa,
+                    # Eğer SDK conversation historyi kendiliğinden güncelliyorsa
                     # append satırını silmek bile yeterli olur.
                     pass 
                 
@@ -512,10 +504,10 @@ def main():
                 break
             except Exception as e:
                 hata_msaji = str(e)
-                # Model tool kullanmayı beceremezse context'i yenileyip şans veriyoruz
+                # Model tool kullanmayı beceremezse contexti yenileyip şans veriyorum
                 if "tool_use_failed" in hata_msaji or "tool call validation" in hata_msaji:
                     if deneme == 0 and conversation_history and conversation_history[-1]["role"] == "user":
-                        # Son mesajı çek çıkar yap ki model kendine gelsin
+                        # Son mesajı pop edelim model kendine gelsin
                         conversation_history.append(conversation_history.pop())
                         continue
                     else:
