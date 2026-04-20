@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
-# Yazan: Yavuz Selim Şeremetli (IAU 3. Sınıf - Finallere çalışmaktan kaçarken yazıldı)
-# Pieces of Mind'da Unity ile boğuşmaktan beynim yanınca kafa dağıtmak için yazdım.
-# Eski sürümde regex ile string parçalamaya çalışıyordum tam amelelikti...
-# Şimdi doğrudan OpenAI SDK kullanıyoruz. Groq API harika bu arada.
-# Kendi kasamdaki RTX 4070'i boşuna yormaya gerek yok, bulutta yağ gibi akıyor resmen :D
+# Eski sürümde regex ile string parçalamaya çalışıyordum
+# Şimdi doğrudan OpenAI SDK kullanıyor
 
 import os
 import sys
