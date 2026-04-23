@@ -4,3 +4,5 @@ __pycache__/
 *.pyc
 chat.log
 hotel_chat.log
+venv/
+.DS_Store
