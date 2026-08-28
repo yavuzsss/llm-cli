@@ -1,8 +1,12 @@
 .env
 .venv/
+venv/
 __pycache__/
 *.pyc
-chat.log
-hotel_chat.log
-venv/
 .DS_Store
+
+# Çalışma zamanında üretilen veriler — repoya girmez
+*.log
+conversation_history.json
+reservations.json
+reservations_archive.json
